@@ -1,13 +1,354 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum CompanyMemberRole {
+  owner
+  member
+}
+
+enum SchoolActivityType {
+  visit
+  call
+  email
+  fair
+  document_sent
+}
+
+enum StudentSourceType {
+  manual
+  csv
+  form
+}
+
+enum StudentFileType {
+  resume
+  memo
+  other
+}
+
+enum ApplicationStatus {
+  new
+  reviewing
+  interview_scheduled
+  interviewed
+  offer
+  accepted
+  declined
+  rejected
+}
+
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyMembers   CompanyMember[]
+  schoolActivities SchoolActivity[]  @relation("SchoolActivityCreatedBy")
+  applicationNotes ApplicationNote[]
+  studentFiles     StudentFile[]
+}
+
+model Company {
+  id            String  @id @default(uuid()) @db.Uuid
+  name          String
+  slug          String  @unique
+  industry      String?
+  address       String?
+  prefecture    String?
+  employeeCount Int?
+  foundedYear   Int?
+  description   String? @db.Text
+  aiDescription String? @db.Text
+  logoUrl       String?
+  websiteUrl    String?
+  isPublic      Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  members        CompanyMember[]
+  videos         CompanyVideo[]
+  photos         CompanyPhoto[]
+  interviews     CompanyInterview[]
+  jobs           Job[]
+  schools        School[]
+  students       Student[]
+  studentFiles   StudentFile[]
+  applications   Application[]
+  matchingScores MatchingScore[]
+
+  @@index([slug])
+}
+
+model CompanyMember {
+  id        String            @id @default(uuid()) @db.Uuid
+  companyId String            @db.Uuid
+  userId    String            @db.Uuid
+  role      CompanyMemberRole @default(member)
+  createdAt DateTime          @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId])
+  @@index([companyId])
+  @@index([userId])
+}
+
+model CompanyVideo {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @db.Uuid
+  url       String
+  title     String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model CompanyPhoto {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @db.Uuid
+  fileUrl   String
+  category  String?
+  caption   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model CompanyInterview {
+  id         String   @id @default(uuid()) @db.Uuid
+  companyId  String   @db.Uuid
+  name       String
+  department String?
+  joinedYear Int?
+  comment    String   @db.Text
+  photoUrl   String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model Job {
+  id                 String  @id @default(uuid()) @db.Uuid
+  companyId          String  @db.Uuid
+  title              String
+  employmentType     String?
+  description        String  @db.Text
+  workLocation       String?
+  salaryMin          Int?
+  salaryMax          Int?
+  workingHours       String?
+  holidays           String? @db.Text
+  benefits           String? @db.Text
+  requiredSkills     String? @db.Text
+  preferredSkills    String? @db.Text
+  desiredPersonality String? @db.Text
+  isOpen             Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  applications   Application[]
+  matchingScores MatchingScore[]
+
+  @@index([companyId])
+  @@index([isOpen])
+}
+
+model School {
+  id         String   @id @default(uuid()) @db.Uuid
+  companyId  String   @db.Uuid
+  name       String
+  schoolType String?
+  prefecture String?
+  address    String?
+  phone      String?
+  website    String?
+  notes      String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  company    Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contacts   SchoolContact[]
+  activities SchoolActivity[]
+  students   Student[]
+
+  @@index([companyId])
+  @@index([name])
+}
+
+model SchoolContact {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  name      String
+  role      String?
+  email     String?
+  phone     String?
+  memo      String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+}
+
+model SchoolActivity {
+  id             String             @id @default(uuid()) @db.Uuid
+  schoolId       String             @db.Uuid
+  companyId      String             @db.Uuid
+  activityType   SchoolActivityType
+  activityDate   DateTime
+  summary        String             @db.Text
+  nextAction     String?            @db.Text
+  nextActionDate DateTime?
+  createdById    String?            @db.Uuid
+  createdAt      DateTime           @default(now())
+
+  school    School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy User?   @relation("SchoolActivityCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([schoolId])
+  @@index([companyId])
+  @@index([createdById])
+}
+
+model Student {
+  id                String            @id @default(uuid()) @db.Uuid
+  companyId         String            @db.Uuid
+  schoolId          String?           @db.Uuid
+  fullName          String
+  kanaName          String?
+  graduationYear    Int?
+  department        String?
+  clubActivity      String?
+  qualifications    String?           @db.Text
+  preferredJobType  String?
+  preferredLocation String?
+  selfPr            String?           @db.Text
+  phone             String?
+  email             String?
+  sourceType        StudentSourceType @default(manual)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  school         School?          @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  files          StudentFile[]
+  applications   Application[]
+  matchingScores MatchingScore[]
+
+  @@index([companyId])
+  @@index([schoolId])
+  @@index([fullName])
+  @@index([sourceType])
+}
+
+model StudentFile {
+  id           String          @id @default(uuid()) @db.Uuid
+  studentId    String          @db.Uuid
+  companyId    String          @db.Uuid
+  fileType     StudentFileType
+  fileUrl      String
+  fileName     String
+  uploadedById String?         @db.Uuid
+  createdAt    DateTime        @default(now())
+
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  uploadedBy User?   @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([companyId])
+  @@index([uploadedById])
+}
+
+model Application {
+  id                  String            @id @default(uuid()) @db.Uuid
+  companyId           String            @db.Uuid
+  studentId           String            @db.Uuid
+  jobId               String            @db.Uuid
+  status              ApplicationStatus @default(new)
+  appliedAt           DateTime          @default(now())
+  lastStatusChangedAt DateTime          @default(now())
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  company                  Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  student                  Student                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  job                      Job                       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  notes                    ApplicationNote[]
+  interviewRecommendations InterviewRecommendation[]
+
+  @@index([companyId])
+  @@index([studentId])
+  @@index([jobId])
+  @@index([status])
+}
+
+model ApplicationNote {
+  id            String   @id @default(uuid()) @db.Uuid
+  applicationId String   @db.Uuid
+  authorId      String?  @db.Uuid
+  note          String   @db.Text
+  createdAt     DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  author      User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([applicationId])
+  @@index([authorId])
+}
+
+model MatchingScore {
+  id              String   @id @default(uuid()) @db.Uuid
+  companyId       String   @db.Uuid
+  studentId       String   @db.Uuid
+  jobId           String   @db.Uuid
+  totalScore      Int
+  attributeScore  Int?
+  preferenceScore Int?
+  historyScore    Int?
+  reasonSummary   String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  job     Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([studentId])
+  @@index([jobId])
+}
+
+model InterviewRecommendation {
+  id             String   @id @default(uuid()) @db.Uuid
+  applicationId  String   @db.Uuid
+  questions      String   @db.Text
+  appealPoints   String?  @db.Text
+  cautionPoints  String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
 }
