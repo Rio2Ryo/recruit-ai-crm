@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Briefcase, Building2, ClipboardList, GraduationCap, LayoutDashboard, School, Users } from "lucide-react";
+import { Briefcase, Building2, CheckSquare, ClipboardList, GraduationCap, LayoutDashboard, School, Sparkles, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -11,7 +11,9 @@ const navItems = [
   { href: "/jobs", label: "求人", icon: Briefcase },
   { href: "/students", label: "候補者", icon: GraduationCap },
   { href: "/schools", label: "学校", icon: School },
-  { href: "/applications", label: "選考", icon: ClipboardList },
+  { href: "/matching", label: "AIマッチング", icon: Sparkles },
+  { href: "/applications", label: "選考パイプライン", icon: ClipboardList },
+  { href: "/tasks", label: "タスク", icon: CheckSquare },
   { href: "/members", label: "メンバー", icon: Users },
 ];
 

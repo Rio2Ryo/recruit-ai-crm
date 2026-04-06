@@ -140,6 +140,400 @@ export const demoApplications = [
   },
 ];
 
+// --- AI Matching Data ---
+export type MatchCandidate = {
+  id: string;
+  name: string;
+  school: string;
+  department: string;
+  jobTitle: string;
+  overallScore: number;
+  attributeScore: number;
+  preferenceScore: number;
+  historyScore: number;
+  matchReasons: string[];
+  interviewQuestions: string[];
+  appealPoints: string[];
+};
+
+export const demoMatchCandidates: MatchCandidate[] = [
+  {
+    id: "mc-1",
+    name: "佐藤 拓海",
+    school: "長野工業高校",
+    department: "機械科",
+    jobTitle: "製造オペレーター",
+    overallScore: 94,
+    attributeScore: 96,
+    preferenceScore: 91,
+    historyScore: 95,
+    matchReasons: [
+      "機械科で旋盤・フライス加工の実習経験が豊富。即戦力として期待できます。",
+      "長野工業高校は過去3年間で当社に5名の入社実績があり、定着率100%です。",
+      "本人の「ものづくりに携わりたい」という志望動機が当社の理念と一致しています。",
+    ],
+    interviewQuestions: [
+      "実習で最も印象に残った加工作業と、そこで工夫したことを教えてください。",
+      "チームで作業する際に心がけていることはありますか？",
+      "将来、どのような技術者になりたいと考えていますか？",
+    ],
+    appealPoints: [
+      "入社1年目から技能検定取得を支援する制度があります。",
+      "先輩社員のマンツーマン指導体制（メンター制度）を紹介してください。",
+      "同校OBの活躍事例を具体的に伝えると効果的です。",
+    ],
+  },
+  {
+    id: "mc-2",
+    name: "小林 美咲",
+    school: "松本工業高校",
+    department: "電気科",
+    jobTitle: "品質管理アシスタント",
+    overallScore: 88,
+    attributeScore: 85,
+    preferenceScore: 92,
+    historyScore: 87,
+    matchReasons: [
+      "電気科で計測機器の扱いに慣れており、品質管理業務への適性が高いです。",
+      "成績上位で真面目な性格。細かい作業を正確にこなす力があります。",
+      "通勤圏内（塩尻市）で、勤務地の希望条件と完全に一致しています。",
+    ],
+    interviewQuestions: [
+      "品質管理に興味を持ったきっかけを教えてください。",
+      "授業や実習で、精密な計測・検査を行った経験はありますか？",
+      "仕事で大切にしたいことを3つ挙げるとしたら何ですか？",
+    ],
+    appealPoints: [
+      "品質管理部門は女性社員も多く活躍しており、働きやすい環境です。",
+      "ISO9001の品質管理体制について具体的に説明してください。",
+      "資格取得支援（品質管理検定など）の制度を紹介すると良いでしょう。",
+    ],
+  },
+  {
+    id: "mc-3",
+    name: "中村 颯",
+    school: "諏訪実業高校",
+    department: "工業技術科",
+    jobTitle: "機械保全スタッフ",
+    overallScore: 81,
+    attributeScore: 78,
+    preferenceScore: 83,
+    historyScore: 82,
+    matchReasons: [
+      "工業技術科でメカトロニクスの基礎を学んでおり、保全業務の素養があります。",
+      "部活動（ロボット部）でトラブルシューティングの経験を積んでいます。",
+      "「機械と向き合う仕事がしたい」という本人の希望が当社求人と合致しています。",
+    ],
+    interviewQuestions: [
+      "ロボット部の活動で、機械の不具合を解決した経験を教えてください。",
+      "新しい機械や技術を学ぶとき、どのようなアプローチを取りますか？",
+      "チームメンバーと意見が合わなかったとき、どう対処しましたか？",
+    ],
+    appealPoints: [
+      "設備の定期メンテナンスだけでなく、改善提案も歓迎する社風です。",
+      "最新のCNC加工機を導入しており、先端技術に触れられる環境です。",
+      "入社2年目で機械保全技能士の資格取得実績があることを伝えてください。",
+    ],
+  },
+  {
+    id: "mc-4",
+    name: "高橋 蓮",
+    school: "上田千曲高校",
+    department: "機械科",
+    jobTitle: "製造オペレーター",
+    overallScore: 76,
+    attributeScore: 74,
+    preferenceScore: 79,
+    historyScore: 75,
+    matchReasons: [
+      "機械科の基礎知識を持ち、図面読解力があります。",
+      "体力があり、交代勤務にも対応可能と面談で回答しています。",
+      "ただし通勤距離がやや遠く（上田市→松本市）、通勤手段の確認が必要です。",
+    ],
+    interviewQuestions: [
+      "松本市への通勤について、具体的にどのように考えていますか？",
+      "製造業に興味を持った理由を教えてください。",
+      "高校生活で最も力を入れたことは何ですか？",
+    ],
+    appealPoints: [
+      "社員寮の案内をすると通勤問題を解消できます。",
+      "未経験からでも成長できる研修プログラムの紹介が効果的です。",
+      "若手社員の定着率の高さ（3年以内離職率10%以下）を伝えてください。",
+    ],
+  },
+  {
+    id: "mc-5",
+    name: "渡辺 結衣",
+    school: "長野工業高校",
+    department: "電子科",
+    jobTitle: "品質管理アシスタント",
+    overallScore: 72,
+    attributeScore: 70,
+    preferenceScore: 76,
+    historyScore: 70,
+    matchReasons: [
+      "電子科で精密機器の取り扱い経験があり、品質管理の素養があります。",
+      "真面目で協調性がある一方、まだ志望動機が明確でない段階です。",
+      "長野工業高校との関係性を活かしてアプローチ可能です。",
+    ],
+    interviewQuestions: [
+      "高校の授業で特に好きだった科目と、その理由を教えてください。",
+      "将来の仕事で「これだけは大切にしたい」と思うことはありますか？",
+      "友人からどんな性格だと言われますか？",
+    ],
+    appealPoints: [
+      "会社見学を通じて実際の職場の雰囲気を体感してもらうのが効果的です。",
+      "同校OBとの座談会を企画すると志望度が上がる可能性があります。",
+      "品質管理の仕事内容を動画で分かりやすく見せると良いでしょう。",
+    ],
+  },
+];
+
+// --- Pipeline / Application Data ---
+export type PipelineStage =
+  | "マッチング候補"
+  | "見学参加"
+  | "応募受付"
+  | "面接"
+  | "内定";
+
+export type PipelineCandidate = {
+  id: string;
+  name: string;
+  school: string;
+  jobTitle: string;
+  score: number;
+  stage: PipelineStage;
+  updatedAt: string;
+  note?: string;
+};
+
+export const pipelineStages: PipelineStage[] = [
+  "マッチング候補",
+  "見学参加",
+  "応募受付",
+  "面接",
+  "内定",
+];
+
+export const demoPipelineCandidates: PipelineCandidate[] = [
+  {
+    id: "pc-1",
+    name: "佐藤 拓海",
+    school: "長野工業高校",
+    jobTitle: "製造オペレーター",
+    score: 94,
+    stage: "面接",
+    updatedAt: "2026-04-04",
+    note: "4/8 面接予定。機械科の実習経験を深掘りする。",
+  },
+  {
+    id: "pc-2",
+    name: "小林 美咲",
+    school: "松本工業高校",
+    jobTitle: "品質管理アシスタント",
+    score: 88,
+    stage: "応募受付",
+    updatedAt: "2026-04-03",
+    note: "書類確認中。成績証明書の到着待ち。",
+  },
+  {
+    id: "pc-3",
+    name: "中村 颯",
+    school: "諏訪実業高校",
+    jobTitle: "機械保全スタッフ",
+    score: 81,
+    stage: "応募受付",
+    updatedAt: "2026-04-03",
+  },
+  {
+    id: "pc-4",
+    name: "高橋 蓮",
+    school: "上田千曲高校",
+    jobTitle: "製造オペレーター",
+    score: 76,
+    stage: "見学参加",
+    updatedAt: "2026-04-02",
+    note: "4/10 会社見学参加予定。社員寮の案内も行う。",
+  },
+  {
+    id: "pc-5",
+    name: "渡辺 結衣",
+    school: "長野工業高校",
+    jobTitle: "品質管理アシスタント",
+    score: 72,
+    stage: "マッチング候補",
+    updatedAt: "2026-04-01",
+    note: "学校訪問時に進路指導の先生から紹介あり。",
+  },
+  {
+    id: "pc-6",
+    name: "伊藤 大翔",
+    school: "松本工業高校",
+    jobTitle: "製造オペレーター",
+    score: 85,
+    stage: "見学参加",
+    updatedAt: "2026-04-02",
+  },
+  {
+    id: "pc-7",
+    name: "加藤 陽菜",
+    school: "岡谷工業高校",
+    jobTitle: "品質管理アシスタント",
+    score: 79,
+    stage: "マッチング候補",
+    updatedAt: "2026-03-30",
+  },
+  {
+    id: "pc-8",
+    name: "鈴木 翔太",
+    school: "長野工業高校",
+    jobTitle: "機械保全スタッフ",
+    score: 90,
+    stage: "内定",
+    updatedAt: "2026-03-28",
+    note: "4/15 内定通知済み。承諾待ち。",
+  },
+  {
+    id: "pc-9",
+    name: "山本 桃花",
+    school: "岡谷工業高校",
+    jobTitle: "製造オペレーター",
+    score: 77,
+    stage: "マッチング候補",
+    updatedAt: "2026-03-29",
+  },
+  {
+    id: "pc-10",
+    name: "田中 悠人",
+    school: "諏訪実業高校",
+    jobTitle: "製造オペレーター",
+    score: 83,
+    stage: "面接",
+    updatedAt: "2026-04-04",
+    note: "4/9 面接予定。志望動機の確認をメインに。",
+  },
+];
+
+// --- Task Management Data ---
+export type TaskPriority = "high" | "medium" | "low";
+export type TaskStatus = "未着手" | "進行中" | "完了";
+
+export type Task = {
+  id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate: string;
+  category: string;
+  relatedTo?: {
+    type: "candidate" | "school" | "application";
+    name: string;
+  };
+};
+
+export const demoTasks: Task[] = [
+  {
+    id: "task-1",
+    title: "長野工業高校 学校訪問",
+    description: "進路指導の田村先生と面談。求人票を持参し、今年度の採用計画を共有する。",
+    status: "未着手",
+    priority: "high",
+    dueDate: "2026-04-07",
+    category: "学校訪問",
+    relatedTo: { type: "school", name: "長野工業高校" },
+  },
+  {
+    id: "task-2",
+    title: "佐藤 拓海さん 面接準備",
+    description: "面接質問リストの最終確認。機械科の実習内容に関する深掘り質問を準備。",
+    status: "進行中",
+    priority: "high",
+    dueDate: "2026-04-07",
+    category: "面接準備",
+    relatedTo: { type: "candidate", name: "佐藤 拓海" },
+  },
+  {
+    id: "task-3",
+    title: "小林 美咲さん フォローアップ",
+    description: "応募書類の確認結果を松本工業高校の中島先生経由で連絡する。",
+    status: "未着手",
+    priority: "medium",
+    dueDate: "2026-04-08",
+    category: "フォローアップ",
+    relatedTo: { type: "candidate", name: "小林 美咲" },
+  },
+  {
+    id: "task-4",
+    title: "松本工業高校 求人票送付",
+    description: "更新した求人票（製造オペレーター・品質管理アシスタント）を郵送する。",
+    status: "未着手",
+    priority: "medium",
+    dueDate: "2026-04-09",
+    category: "求人票送付",
+    relatedTo: { type: "school", name: "松本工業高校" },
+  },
+  {
+    id: "task-5",
+    title: "田中 悠人さん 面接準備",
+    description: "面接日程の最終確認。諏訪実業高校への連絡も忘れずに。",
+    status: "未着手",
+    priority: "high",
+    dueDate: "2026-04-08",
+    category: "面接準備",
+    relatedTo: { type: "candidate", name: "田中 悠人" },
+  },
+  {
+    id: "task-6",
+    title: "高橋 蓮さん 会社見学準備",
+    description: "見学当日のスケジュール作成。社員寮の案内資料も準備する。",
+    status: "進行中",
+    priority: "medium",
+    dueDate: "2026-04-09",
+    category: "フォローアップ",
+    relatedTo: { type: "candidate", name: "高橋 蓮" },
+  },
+  {
+    id: "task-7",
+    title: "岡谷工業高校 会社見学案内",
+    description: "井上先生宛に会社見学の日程候補（4月中旬）を連絡する。",
+    status: "未着手",
+    priority: "low",
+    dueDate: "2026-04-10",
+    category: "学校訪問",
+    relatedTo: { type: "school", name: "岡谷工業高校" },
+  },
+  {
+    id: "task-8",
+    title: "鈴木 翔太さん 内定フォロー",
+    description: "内定承諾の意思確認。入社前研修のスケジュールを案内する。",
+    status: "進行中",
+    priority: "high",
+    dueDate: "2026-04-10",
+    category: "フォローアップ",
+    relatedTo: { type: "candidate", name: "鈴木 翔太" },
+  },
+  {
+    id: "task-9",
+    title: "採用ページ 動画コンテンツ更新",
+    description: "先輩社員インタビュー動画を撮影・編集し、公開ページに追加する。",
+    status: "未着手",
+    priority: "low",
+    dueDate: "2026-04-14",
+    category: "求人票送付",
+  },
+  {
+    id: "task-10",
+    title: "月次採用レポート作成",
+    description: "3月の採用活動実績をまとめ、経営陣に報告する。",
+    status: "完了",
+    priority: "medium",
+    dueDate: "2026-04-03",
+    category: "フォローアップ",
+  },
+];
+
 export const demoCompany = {
   name: "株式会社北信精工",
   slug: "hokushin-seiko",
