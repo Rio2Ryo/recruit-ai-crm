@@ -1,9 +1,3 @@
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+// Prisma integration will be enabled in the next phase when DB connectivity is wired.
+// This placeholder keeps the UI-only build deployable on Vercel.
+export const prisma = null;
