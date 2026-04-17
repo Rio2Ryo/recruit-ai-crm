@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   Briefcase,
   Building2,
   CheckSquare,
@@ -37,6 +38,7 @@ const navSections = [
       { href: "/matching", label: "AIマッチング", icon: Sparkles },
       { href: "/applications", label: "選考パイプライン", icon: ClipboardList },
       { href: "/tasks", label: "タスク", icon: CheckSquare },
+      { href: "/pipeline", label: "歩留まり管理", icon: BarChart3 },
     ],
   },
   {

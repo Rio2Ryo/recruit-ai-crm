@@ -1,8 +1,8 @@
 import { Header } from "@/components/layout/header";
 import {
   demoActivities,
+  demoFunnelData,
   demoJobs,
-  demoStats,
   demoStudents,
 } from "@/lib/demo-data";
 import {
@@ -18,9 +18,9 @@ import {
 
 const statCards = [
   {
-    label: "候補者数",
-    value: demoStats.students,
-    change: "+12%",
+    label: "LINE流入数",
+    value: 248,
+    change: "+18%",
     changeLabel: "前週比",
     trend: "up" as const,
     icon: GraduationCap,
@@ -29,7 +29,7 @@ const statCards = [
   },
   {
     label: "応募数",
-    value: demoStats.applications,
+    value: 156,
     change: "+8件",
     changeLabel: "今月",
     trend: "up" as const,
@@ -38,20 +38,20 @@ const statCards = [
     iconColor: "text-violet-600",
   },
   {
-    label: "面接予定",
-    value: demoStats.interviews,
-    change: "3件",
-    changeLabel: "今週",
-    trend: "neutral" as const,
+    label: "面接中",
+    value: 80,
+    change: "52+28件",
+    changeLabel: "一次+最終",
+    trend: "up" as const,
     icon: CalendarCheck,
     iconBg: "bg-amber-50",
     iconColor: "text-amber-600",
   },
   {
     label: "内定数",
-    value: demoStats.offers,
-    change: "66%",
-    changeLabel: "承諾率",
+    value: 15,
+    change: "6.0%",
+    changeLabel: "歩留まり率",
     trend: "up" as const,
     icon: Award,
     iconBg: "bg-emerald-50",
@@ -106,46 +106,55 @@ export default function DashboardPage() {
 
         {/* Chart placeholder + Activity */}
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-          {/* Chart area */}
+          {/* Funnel chart */}
           <div className="xl:col-span-2 rounded-xl bg-white p-6 ring-1 ring-gray-200/60 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-sm font-semibold text-gray-900">
-                  採用パイプライン推移
+                  採用ファネル（歩留まり）
                 </h2>
                 <p className="mt-0.5 text-xs text-gray-500">
-                  月別の候補者数と応募数の推移
+                  LINE流入から入社までの歩留まり推移
                 </p>
               </div>
-              <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5">
-                <button className="rounded-md bg-white px-3 py-1 text-xs font-medium text-gray-900 shadow-sm">
-                  月別
-                </button>
-                <button className="rounded-md px-3 py-1 text-xs text-gray-500 hover:text-gray-700">
-                  週別
-                </button>
+              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <BarChart3 className="size-3.5" />
+                累計
               </div>
             </div>
-            {/* Chart placeholder */}
-            <div className="relative h-52 rounded-lg bg-gradient-to-b from-indigo-50/50 to-white border border-dashed border-indigo-200/60 flex items-center justify-center">
-              <div className="text-center">
-                <BarChart3 className="mx-auto size-8 text-indigo-300" />
-                <p className="mt-2 text-xs text-gray-400">
-                  チャートエリア (Recharts連携予定)
-                </p>
-              </div>
-              {/* Decorative bars */}
-              <div className="absolute bottom-4 left-6 right-6 flex items-end gap-2">
-                {[40, 55, 35, 65, 50, 75, 60, 80, 70, 90, 85, 95].map(
-                  (h, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 rounded-t-sm bg-indigo-200/60"
-                      style={{ height: `${h}%` }}
-                    />
-                  )
-                )}
-              </div>
+            <div className="space-y-2.5">
+              {demoFunnelData.map((item) => {
+                const widthPercent = (item.count / 248) * 100;
+                const yieldPercent = ((item.count / 248) * 100).toFixed(1);
+                return (
+                  <div key={item.stage} className="flex items-center gap-3">
+                    <span className="w-[4.5rem] shrink-0 text-right text-xs font-medium text-gray-600">
+                      {item.stage}
+                    </span>
+                    <div className="relative flex-1 h-7">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-md"
+                        style={{
+                          width: `${widthPercent}%`,
+                          backgroundColor: item.color,
+                          minWidth: "2rem",
+                        }}
+                      />
+                      <div className="absolute inset-y-0 left-0 right-0 flex items-center">
+                        <span
+                          className="ml-2 text-[11px] font-semibold text-white drop-shadow-sm"
+                          style={{ marginLeft: Math.min(widthPercent, 90) > 15 ? "0.5rem" : undefined }}
+                        >
+                          {item.count}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="w-12 shrink-0 text-right text-xs font-medium text-gray-500">
+                      {yieldPercent}%
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

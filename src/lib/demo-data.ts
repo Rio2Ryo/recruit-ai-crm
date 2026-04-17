@@ -545,3 +545,70 @@ export const demoCompany = {
   description:
     "精密部品の製造を強みに、若手が現場で成長できる教育体制を整えている中小製造業です。",
 };
+
+// --- Yield Funnel Data (歩留まり管理) ---
+export type FunnelStage = 'LINE流入' | '応募' | '書類選考' | '一次面接' | '最終面接' | '内定' | '入社';
+
+export const funnelStages: FunnelStage[] = ['LINE流入', '応募', '書類選考', '一次面接', '最終面接', '内定', '入社'];
+
+export interface FunnelData {
+  stage: FunnelStage;
+  count: number;
+  color: string;
+}
+
+export const demoFunnelData: FunnelData[] = [
+  { stage: 'LINE流入', count: 248, color: '#6366f1' },
+  { stage: '応募', count: 156, color: '#8b5cf6' },
+  { stage: '書類選考', count: 98, color: '#a855f7' },
+  { stage: '一次面接', count: 52, color: '#d946ef' },
+  { stage: '最終面接', count: 28, color: '#ec4899' },
+  { stage: '内定', count: 15, color: '#f43f5e' },
+  { stage: '入社', count: 12, color: '#10b981' },
+];
+
+// Monthly funnel trend data
+export interface MonthlyFunnel {
+  month: string;
+  LINE流入: number;
+  応募: number;
+  書類選考: number;
+  一次面接: number;
+  最終面接: number;
+  内定: number;
+  入社: number;
+}
+
+export const demoMonthlyFunnel: MonthlyFunnel[] = [
+  { month: '2026-01', LINE流入: 45, 応募: 28, 書類選考: 18, 一次面接: 10, 最終面接: 5, 内定: 3, 入社: 2 },
+  { month: '2026-02', LINE流入: 62, 応募: 38, 書類選考: 24, 一次面接: 13, 最終面接: 7, 内定: 4, 入社: 3 },
+  { month: '2026-03', LINE流入: 78, 応募: 51, 書類選考: 32, 一次面接: 17, 最終面接: 9, 内定: 5, 入社: 4 },
+  { month: '2026-04', LINE流入: 63, 応募: 39, 書類選考: 24, 一次面接: 12, 最終面接: 7, 内定: 3, 入社: 3 },
+];
+
+// Candidate detail for funnel management
+export interface FunnelCandidate {
+  id: string;
+  name: string;
+  source: 'LINE' | 'Web' | '紹介' | '学校';
+  currentStage: FunnelStage;
+  appliedAt: string;
+  lastUpdated: string;
+  position: string;
+  note?: string;
+}
+
+export const demoFunnelCandidates: FunnelCandidate[] = [
+  { id: 'fc-1', name: '佐藤 拓海', source: 'LINE', currentStage: '最終面接', appliedAt: '2026-03-15', lastUpdated: '2026-04-14', position: '製造オペレーター', note: '4/18 最終面接予定' },
+  { id: 'fc-2', name: '小林 美咲', source: 'LINE', currentStage: '一次面接', appliedAt: '2026-03-20', lastUpdated: '2026-04-12', position: '品質管理', note: '面接日程調整中' },
+  { id: 'fc-3', name: '中村 颯', source: 'Web', currentStage: '書類選考', appliedAt: '2026-04-01', lastUpdated: '2026-04-10', position: '機械保全' },
+  { id: 'fc-4', name: '高橋 蓮', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-05', lastUpdated: '2026-04-05', position: '製造オペレーター' },
+  { id: 'fc-5', name: '渡辺 結衣', source: '紹介', currentStage: '内定', appliedAt: '2026-02-28', lastUpdated: '2026-04-15', position: '品質管理', note: '内定承諾待ち' },
+  { id: 'fc-6', name: '伊藤 大翔', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-10', lastUpdated: '2026-04-10', position: '未定' },
+  { id: 'fc-7', name: '加藤 陽菜', source: '学校', currentStage: '一次面接', appliedAt: '2026-03-18', lastUpdated: '2026-04-11', position: '品質管理' },
+  { id: 'fc-8', name: '鈴木 翔太', source: 'LINE', currentStage: '入社', appliedAt: '2026-01-15', lastUpdated: '2026-04-01', position: '機械保全', note: '4/1 入社済み' },
+  { id: 'fc-9', name: '山本 桃花', source: 'Web', currentStage: 'LINE流入', appliedAt: '2026-04-12', lastUpdated: '2026-04-12', position: '未定' },
+  { id: 'fc-10', name: '田中 悠人', source: 'LINE', currentStage: '書類選考', appliedAt: '2026-04-03', lastUpdated: '2026-04-09', position: '製造オペレーター' },
+  { id: 'fc-11', name: '松田 健太', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-08', lastUpdated: '2026-04-08', position: '製造オペレーター' },
+  { id: 'fc-12', name: '吉田 さくら', source: '紹介', currentStage: '最終面接', appliedAt: '2026-03-10', lastUpdated: '2026-04-13', position: '品質管理', note: '最終面接通過見込み' },
+];
