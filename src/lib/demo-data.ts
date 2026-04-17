@@ -535,7 +535,7 @@ export const demoTasks: Task[] = [
 ];
 
 export const demoCompany = {
-  name: "株式会社竹島鉄鋼",
+  name: "竹島鉄工建設株式会社",
   slug: "hokushin-seiko",
   industry: "金属加工・精密部品製造",
   prefecture: "長野県",

@@ -74,7 +74,7 @@ export function Sidebar() {
       {/* Company pill */}
       <div className="mx-4 mb-3">
         <div className="rounded-lg bg-white/[0.08] px-3 py-2.5 backdrop-blur">
-          <p className="text-xs font-semibold text-white">竹島鉄鋼</p>
+          <p className="text-xs font-semibold text-white">竹島鉄工建設</p>
           <p className="mt-0.5 text-[10px] leading-relaxed text-indigo-300">
             高卒採用の一元管理
           </p>
