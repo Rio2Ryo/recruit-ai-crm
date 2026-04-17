@@ -332,12 +332,12 @@ export default function PipelinePage() {
           </div>
         </div>
 
-        {/* Desktop: Full 7-column kanban */}
-        <div className="hidden lg:grid grid-cols-7 gap-3 min-h-[500px]">
+        {/* Desktop: Full 7-column kanban (horizontally scrollable) */}
+        <div className="hidden lg:flex gap-4 min-h-[500px] overflow-x-auto pb-4">
           {stageGroups.map((group, i) => {
             const colors = stageColors[group.stage];
             return (
-              <div key={group.stage} className="flex flex-col min-w-0">
+              <div key={group.stage} className="flex flex-col min-w-[200px] w-[200px] shrink-0">
                 {/* Column Header */}
                 <div className={`rounded-xl ${colors.headerBg} border ${colors.border} px-3 py-3 mb-3 shadow-sm`}>
                   <div className="flex items-center justify-between">
