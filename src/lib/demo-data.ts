@@ -599,16 +599,54 @@ export interface FunnelCandidate {
 }
 
 export const demoFunnelCandidates: FunnelCandidate[] = [
-  { id: 'fc-1', name: '佐藤 拓海', source: 'LINE', currentStage: '最終面接', appliedAt: '2026-03-15', lastUpdated: '2026-04-14', position: '製造オペレーター', note: '4/18 最終面接予定' },
-  { id: 'fc-2', name: '小林 美咲', source: 'LINE', currentStage: '一次面接', appliedAt: '2026-03-20', lastUpdated: '2026-04-12', position: '品質管理', note: '面接日程調整中' },
-  { id: 'fc-3', name: '中村 颯', source: 'Web', currentStage: '書類選考', appliedAt: '2026-04-01', lastUpdated: '2026-04-10', position: '機械保全' },
-  { id: 'fc-4', name: '高橋 蓮', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-05', lastUpdated: '2026-04-05', position: '製造オペレーター' },
-  { id: 'fc-5', name: '渡辺 結衣', source: '紹介', currentStage: '内定', appliedAt: '2026-02-28', lastUpdated: '2026-04-15', position: '品質管理', note: '内定承諾待ち' },
+  // LINE流入 — 15名
   { id: 'fc-6', name: '伊藤 大翔', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-10', lastUpdated: '2026-04-10', position: '未定' },
-  { id: 'fc-7', name: '加藤 陽菜', source: '学校', currentStage: '一次面接', appliedAt: '2026-03-18', lastUpdated: '2026-04-11', position: '品質管理' },
-  { id: 'fc-8', name: '鈴木 翔太', source: 'LINE', currentStage: '入社', appliedAt: '2026-01-15', lastUpdated: '2026-04-01', position: '機械保全', note: '4/1 入社済み' },
   { id: 'fc-9', name: '山本 桃花', source: 'Web', currentStage: 'LINE流入', appliedAt: '2026-04-12', lastUpdated: '2026-04-12', position: '未定' },
-  { id: 'fc-10', name: '田中 悠人', source: 'LINE', currentStage: '書類選考', appliedAt: '2026-04-03', lastUpdated: '2026-04-09', position: '製造オペレーター' },
+  { id: 'fc-13', name: '石井 優太', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-13', lastUpdated: '2026-04-13', position: '未定' },
+  { id: 'fc-14', name: '木村 花音', source: 'Web', currentStage: 'LINE流入', appliedAt: '2026-04-14', lastUpdated: '2026-04-14', position: '未定' },
+  { id: 'fc-15', name: '森 大地', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-14', lastUpdated: '2026-04-14', position: '未定' },
+  { id: 'fc-16', name: '池田 莉子', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-15', lastUpdated: '2026-04-15', position: '未定' },
+  { id: 'fc-17', name: '橋本 翼', source: 'Web', currentStage: 'LINE流入', appliedAt: '2026-04-15', lastUpdated: '2026-04-15', position: '未定' },
+  { id: 'fc-18', name: '原田 凛', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-15', lastUpdated: '2026-04-15', position: '未定' },
+  { id: 'fc-19', name: '野村 海斗', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-16', lastUpdated: '2026-04-16', position: '未定' },
+  { id: 'fc-20', name: '藤井 心春', source: '紹介', currentStage: 'LINE流入', appliedAt: '2026-04-16', lastUpdated: '2026-04-16', position: '未定' },
+  { id: 'fc-21', name: '岡田 蒼空', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-16', lastUpdated: '2026-04-16', position: '未定' },
+  { id: 'fc-22', name: '松本 美月', source: 'Web', currentStage: 'LINE流入', appliedAt: '2026-04-16', lastUpdated: '2026-04-16', position: '未定' },
+  { id: 'fc-23', name: '上田 陽向', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-17', lastUpdated: '2026-04-17', position: '未定' },
+  { id: 'fc-24', name: '西村 結菜', source: 'LINE', currentStage: 'LINE流入', appliedAt: '2026-04-17', lastUpdated: '2026-04-17', position: '未定' },
+  { id: 'fc-25', name: '中島 大輝', source: '学校', currentStage: 'LINE流入', appliedAt: '2026-04-17', lastUpdated: '2026-04-17', position: '未定' },
+  // 応募 — 10名
+  { id: 'fc-4', name: '高橋 蓮', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-05', lastUpdated: '2026-04-05', position: '製造オペレーター' },
   { id: 'fc-11', name: '松田 健太', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-08', lastUpdated: '2026-04-08', position: '製造オペレーター' },
+  { id: 'fc-26', name: '斉藤 彩花', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-06', lastUpdated: '2026-04-06', position: '品質管理' },
+  { id: 'fc-27', name: '村上 颯太', source: 'Web', currentStage: '応募', appliedAt: '2026-04-07', lastUpdated: '2026-04-07', position: '機械保全' },
+  { id: 'fc-28', name: '近藤 杏', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-09', lastUpdated: '2026-04-09', position: '製造オペレーター' },
+  { id: 'fc-29', name: '川口 悠斗', source: '紹介', currentStage: '応募', appliedAt: '2026-04-10', lastUpdated: '2026-04-10', position: '品質管理' },
+  { id: 'fc-30', name: '遠藤 七海', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-11', lastUpdated: '2026-04-11', position: '製造オペレーター' },
+  { id: 'fc-31', name: '内田 陸', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-12', lastUpdated: '2026-04-12', position: '機械保全' },
+  { id: 'fc-32', name: '福田 茉白', source: '学校', currentStage: '応募', appliedAt: '2026-04-13', lastUpdated: '2026-04-13', position: '品質管理' },
+  { id: 'fc-33', name: '坂本 湊', source: 'LINE', currentStage: '応募', appliedAt: '2026-04-14', lastUpdated: '2026-04-14', position: '製造オペレーター' },
+  // 書類選考 — 7名
+  { id: 'fc-3', name: '中村 颯', source: 'Web', currentStage: '書類選考', appliedAt: '2026-04-01', lastUpdated: '2026-04-10', position: '機械保全' },
+  { id: 'fc-10', name: '田中 悠人', source: 'LINE', currentStage: '書類選考', appliedAt: '2026-04-03', lastUpdated: '2026-04-09', position: '製造オペレーター' },
+  { id: 'fc-34', name: '武田 朝陽', source: 'LINE', currentStage: '書類選考', appliedAt: '2026-03-28', lastUpdated: '2026-04-08', position: '製造オペレーター' },
+  { id: 'fc-35', name: '大野 琴音', source: '紹介', currentStage: '書類選考', appliedAt: '2026-03-30', lastUpdated: '2026-04-07', position: '品質管理' },
+  { id: 'fc-36', name: '河野 陽太', source: 'LINE', currentStage: '書類選考', appliedAt: '2026-04-02', lastUpdated: '2026-04-11', position: '機械保全' },
+  { id: 'fc-37', name: '杉山 凪沙', source: 'Web', currentStage: '書類選考', appliedAt: '2026-04-04', lastUpdated: '2026-04-12', position: '品質管理' },
+  { id: 'fc-38', name: '前田 蓮翔', source: 'LINE', currentStage: '書類選考', appliedAt: '2026-04-05', lastUpdated: '2026-04-13', position: '製造オペレーター' },
+  // 一次面接 — 5名
+  { id: 'fc-2', name: '小林 美咲', source: 'LINE', currentStage: '一次面接', appliedAt: '2026-03-20', lastUpdated: '2026-04-12', position: '品質管理', note: '面接日程調整中' },
+  { id: 'fc-7', name: '加藤 陽菜', source: '学校', currentStage: '一次面接', appliedAt: '2026-03-18', lastUpdated: '2026-04-11', position: '品質管理' },
+  { id: 'fc-39', name: '長谷川 陽', source: 'LINE', currentStage: '一次面接', appliedAt: '2026-03-15', lastUpdated: '2026-04-10', position: '製造オペレーター', note: '4/19 面接予定' },
+  { id: 'fc-40', name: '今井 楓', source: 'Web', currentStage: '一次面接', appliedAt: '2026-03-22', lastUpdated: '2026-04-14', position: '機械保全' },
+  { id: 'fc-41', name: '小川 咲良', source: 'LINE', currentStage: '一次面接', appliedAt: '2026-03-25', lastUpdated: '2026-04-15', position: '品質管理', note: '4/20 面接予定' },
+  // 最終面接 — 3名
+  { id: 'fc-1', name: '佐藤 拓海', source: 'LINE', currentStage: '最終面接', appliedAt: '2026-03-15', lastUpdated: '2026-04-14', position: '製造オペレーター', note: '4/18 最終面接予定' },
   { id: 'fc-12', name: '吉田 さくら', source: '紹介', currentStage: '最終面接', appliedAt: '2026-03-10', lastUpdated: '2026-04-13', position: '品質管理', note: '最終面接通過見込み' },
+  { id: 'fc-42', name: '三浦 律', source: 'LINE', currentStage: '最終面接', appliedAt: '2026-03-08', lastUpdated: '2026-04-16', position: '製造オペレーター', note: '好印象、内定見込み' },
+  // 内定 — 2名
+  { id: 'fc-5', name: '渡辺 結衣', source: '紹介', currentStage: '内定', appliedAt: '2026-02-28', lastUpdated: '2026-04-15', position: '品質管理', note: '内定承諾待ち' },
+  { id: 'fc-43', name: '阿部 奏', source: 'LINE', currentStage: '内定', appliedAt: '2026-02-20', lastUpdated: '2026-04-14', position: '製造オペレーター', note: '承諾済み・入社準備中' },
+  // 入社 — 1名
+  { id: 'fc-8', name: '鈴木 翔太', source: 'LINE', currentStage: '入社', appliedAt: '2026-01-15', lastUpdated: '2026-04-01', position: '機械保全', note: '4/1 入社済み' },
 ];
