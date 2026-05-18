@@ -558,13 +558,13 @@ export interface FunnelData {
 }
 
 export const demoFunnelData: FunnelData[] = [
-  { stage: 'LINE流入', count: 248, color: '#6366f1' },
-  { stage: '応募', count: 156, color: '#8b5cf6' },
-  { stage: '書類選考', count: 98, color: '#a855f7' },
-  { stage: '一次面接', count: 52, color: '#d946ef' },
-  { stage: '最終面接', count: 28, color: '#ec4899' },
-  { stage: '内定', count: 15, color: '#f43f5e' },
-  { stage: '入社', count: 12, color: '#10b981' },
+  { stage: 'LINE流入', count: 152, color: '#6366f1' },
+  { stage: '応募', count: 96, color: '#8b5cf6' },
+  { stage: '書類選考', count: 61, color: '#a855f7' },
+  { stage: '一次面接', count: 34, color: '#d946ef' },
+  { stage: '最終面接', count: 19, color: '#ec4899' },
+  { stage: '内定', count: 10, color: '#f43f5e' },
+  { stage: '入社', count: 7, color: '#10b981' },
 ];
 
 // Monthly funnel trend data

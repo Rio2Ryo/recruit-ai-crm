@@ -19,7 +19,7 @@ import {
 const statCards = [
   {
     label: "LINE流入数",
-    value: 248,
+    value: 152,
     change: "+18%",
     changeLabel: "前週比",
     trend: "up" as const,
@@ -29,7 +29,7 @@ const statCards = [
   },
   {
     label: "応募数",
-    value: 156,
+    value: 96,
     change: "+8件",
     changeLabel: "今月",
     trend: "up" as const,
@@ -39,8 +39,8 @@ const statCards = [
   },
   {
     label: "面接中",
-    value: 80,
-    change: "52+28件",
+    value: 53,
+    change: "34+19件",
     changeLabel: "一次+最終",
     trend: "up" as const,
     icon: CalendarCheck,
@@ -49,8 +49,8 @@ const statCards = [
   },
   {
     label: "内定数",
-    value: 15,
-    change: "6.0%",
+    value: 10,
+    change: "6.6%",
     changeLabel: "歩留まり率",
     trend: "up" as const,
     icon: Award,
@@ -124,8 +124,8 @@ export default function DashboardPage() {
             </div>
             <div className="space-y-2.5">
               {demoFunnelData.map((item) => {
-                const widthPercent = (item.count / 248) * 100;
-                const yieldPercent = ((item.count / 248) * 100).toFixed(1);
+                const widthPercent = (item.count / 152) * 100;
+                const yieldPercent = ((item.count / 152) * 100).toFixed(1);
                 return (
                   <div key={item.stage} className="flex items-center gap-3">
                     <span className="w-[4.5rem] shrink-0 text-right text-xs font-medium text-gray-600">
