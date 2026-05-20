@@ -2,15 +2,28 @@
 
 ## 採用したOSS
 
+### 本命: LINE Harness / line-harness-oss
+
+- GitHub: `Shudesu/line-harness-oss`
+- 公式LP: `https://shudesu.github.io/line-harness-oss/`
+- LINE公式アカウント向けのOSS CRM。Lステップ/Utage系の無料代替候補。
+- Cloudflare Workers + D1 + Pages構成。
+- ステップ配信、セグメント配信、タグ、スコアリング、LIFFフォーム、リッチメニュー、REST API、MCP server を持つ。
+
+採用管理ツールでは、LINE Harnessを「LINE運用本体」、Recruit AI CRMを「採用DB/歩留まり管理」として連携する。
+詳細: `docs/line-harness-integration.md`
+
+### 既存の補助実装
+
 - `@line/line-bot-mcp-server` / GitHub: `line/line-bot-mcp-server`
-  - LINE公式アカウントの Messaging API を MCP/CLI的に扱う公式OSS。
+  - LINE公式アカウントの Messaging API をMCP/CLI的に扱う公式OSS。
   - push / broadcast / profile / quota / rich menu 系に対応。
 - `@line/liff-cli` / GitHub: `line/liff-cli`
   - LINE内Webアプリ（LIFF）の作成・更新に使う公式CLI。
 - `@line/bot-sdk`
   - Next.js API RouteからWebhook返信・応募受付後のpush送信を行うための公式SDK。
 
-補足: 「LINEのHermes」という名前の公式OSSは確認できなかった。実用途に最も近いのは `line-bot-mcp-server` と `liff-cli`。
+補足: 以前探していた「LINEのHermes」は、おそらく今回指定の LINE Harness を指していた可能性が高い。
 
 ## 実装した導線
 
@@ -31,6 +44,12 @@ LINE_CHANNEL_SECRET=xxx
 NEXT_PUBLIC_APP_URL=https://your-vercel-domain.vercel.app
 # 任意: 管理APIを外部から叩く場合
 LINE_CLI_ADMIN_KEY=change-me
+
+# LINE Harness連携
+LINE_HARNESS_API_URL=https://your-worker.workers.dev
+LINE_HARNESS_API_KEY=xxx
+LINE_HARNESS_WEBHOOK_SECRET=change-me
+LINE_HARNESS_APPLIED_TAG_ID=tag_uuid_optional
 ```
 
 ## CLI操作

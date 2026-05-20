@@ -171,7 +171,7 @@ export default function PipelinePage() {
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-gray-900">公式LINE応募導線</h2>
-                <p className="text-xs text-gray-500">友だち追加 → LINE内応募 → 管理画面で歩留まり管理</p>
+                <p className="text-xs text-gray-500">LINE Harness → LINE内応募 → 管理画面で歩留まり管理</p>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
@@ -183,7 +183,7 @@ export default function PipelinePage() {
               ))}
             </div>
             <div className="mt-4 rounded-lg bg-green-50 p-3 text-xs leading-6 text-green-800 ring-1 ring-green-200/70">
-              Webhook: <code>/api/line/webhook</code> / 応募フォーム: <code>/line/apply</code> / CLI送信: <code>npm run line:send</code>
+              Harness連携: <code>/api/integrations/line-harness/submission</code> / 直接Webhook: <code>/api/line/webhook</code> / CLI送信: <code>npm run line:send</code>
             </div>
           </div>
 
