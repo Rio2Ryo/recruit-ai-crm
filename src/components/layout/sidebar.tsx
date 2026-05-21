@@ -10,8 +10,8 @@ import {
   ClipboardList,
   GraduationCap,
   LayoutDashboard,
+  MessageCircle,
   School,
-  Settings,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -46,7 +46,7 @@ const navSections = [
     label: "設定",
     items: [
       { href: "/members", label: "メンバー", icon: Users },
-      { href: "/settings/line", label: "公式LINE設定", icon: Settings },
+      { href: "/settings/line", label: "LINE応募導線", icon: MessageCircle },
     ],
   },
 ];
