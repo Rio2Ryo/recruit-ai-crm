@@ -11,6 +11,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   School,
+  Settings,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -43,7 +44,10 @@ const navSections = [
   },
   {
     label: "設定",
-    items: [{ href: "/members", label: "メンバー", icon: Users }],
+    items: [
+      { href: "/members", label: "メンバー", icon: Users },
+      { href: "/settings/line", label: "公式LINE設定", icon: Settings },
+    ],
   },
 ];
 
