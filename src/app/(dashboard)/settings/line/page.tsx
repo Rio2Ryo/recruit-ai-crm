@@ -18,6 +18,7 @@ import {
 import { Header } from "@/components/layout/header";
 import { LineCopyField } from "@/components/settings/line-copy-field";
 import { LineEnvStatus } from "@/components/settings/line-env-status";
+import { LineHealthCheck } from "@/components/settings/line-health-check";
 
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL || "https://recruit-ai-crm.vercel.app";
@@ -280,6 +281,8 @@ export default function LineSettingsPage() {
               </div>
             </div>
           </section>
+
+          <LineHealthCheck />
 
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl bg-white p-5 ring-1 ring-gray-200 shadow-sm">
