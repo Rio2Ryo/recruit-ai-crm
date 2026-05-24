@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLineApplicant } from "@/lib/line-recruiting";
+import { saveLineApplicant } from "@/lib/line-applicant-store";
 import { getLineHarnessClient, getStringField, type LineHarnessFormSubmission } from "@/lib/line-harness";
 
 function isAuthorized(request: NextRequest) {
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     "submission" in payload && payload.submission ? payload.submission : (payload as LineHarnessFormSubmission);
   const data = submission.data ?? {};
 
-  const applicant = createLineApplicant({
+  const applicant = saveLineApplicant({
     lineUserId: submission.lineUserId ?? submission.friendId ?? "line-harness-friend",
     name: getStringField(data, ["name", "氏名", "fullName", "お名前"]),
     school: getStringField(data, ["school", "学校名", "schoolName"]),
@@ -64,7 +64,5 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // 現時点では本体がデモデータ運用のため、永続化は次フェーズ。
-  // DB接続後はここで Student/Application/CandidateEvent に upsert する。
   return NextResponse.json({ ok: true, applicant, harnessUpdates });
 }

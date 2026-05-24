@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLineApplicant } from "@/lib/line-recruiting";
+import { saveLineApplicant } from "@/lib/line-applicant-store";
 
 async function pushText(userId: string, text: string) {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
@@ -26,7 +26,7 @@ async function pushText(userId: string, text: string) {
 
 export async function POST(request: NextRequest) {
   const input = await request.json();
-  const applicant = createLineApplicant({
+  const applicant = saveLineApplicant({
     lineUserId: input.lineUserId || "demo-line-user",
     name: input.name,
     school: input.school,

@@ -10,6 +10,9 @@ datasource db {
 
 enum CompanyMemberRole {
   owner
+  admin
+  recruiter
+  viewer
   member
 }
 
@@ -29,6 +32,9 @@ enum StudentSourceType {
 
 enum StudentFileType {
   resume
+  resume_pdf
+  transcript
+  portfolio
   memo
   other
 }
@@ -55,6 +61,7 @@ model User {
   schoolActivities SchoolActivity[]  @relation("SchoolActivityCreatedBy")
   applicationNotes ApplicationNote[]
   studentFiles     StudentFile[]
+  resumes          Resume[]
 }
 
 model Company {
@@ -82,6 +89,7 @@ model Company {
   schools        School[]
   students       Student[]
   studentFiles   StudentFile[]
+  resumes        Resume[]
   applications   Application[]
   matchingScores MatchingScore[]
 
@@ -93,6 +101,10 @@ model CompanyMember {
   companyId String            @db.Uuid
   userId    String            @db.Uuid
   role      CompanyMemberRole @default(member)
+  canManageUsers Boolean      @default(false)
+  canManageLine  Boolean      @default(false)
+  canViewResumes Boolean      @default(true)
+  canEditResumes Boolean      @default(false)
   createdAt DateTime          @default(now())
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -254,6 +266,7 @@ model Student {
   company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   school         School?          @relation(fields: [schoolId], references: [id], onDelete: SetNull)
   files          StudentFile[]
+  resumes        Resume[]
   applications   Application[]
   matchingScores MatchingScore[]
 
@@ -261,6 +274,33 @@ model Student {
   @@index([schoolId])
   @@index([fullName])
   @@index([sourceType])
+}
+
+model Resume {
+  id              String   @id @default(uuid()) @db.Uuid
+  studentId       String   @db.Uuid
+  companyId       String   @db.Uuid
+  title           String   @default("履歴書")
+  fileUrl         String?
+  fileName        String?
+  extractedText   String?  @db.Text
+  summary         String?  @db.Text
+  education       String?  @db.Text
+  workPreference  String?  @db.Text
+  qualifications  String?  @db.Text
+  accessLevel     String   @default("recruiting_team")
+  uploadedById    String?  @db.Uuid
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  uploadedBy User?   @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([companyId])
+  @@index([uploadedById])
+  @@index([accessLevel])
 }
 
 model StudentFile {

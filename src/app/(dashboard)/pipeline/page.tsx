@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/header";
 import {
-  demoFunnelData,
   demoFunnelCandidates,
   funnelStages,
   type FunnelStage,
@@ -133,6 +132,17 @@ export default function PipelinePage() {
   const [candidates, setCandidates] = useState(demoFunnelCandidates);
   const [mobileStage, setMobileStage] = useState<FunnelStage>("LINE流入");
 
+  useEffect(() => {
+    fetch("/api/line/applicants", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const json = await response.json();
+        const lineCandidates = (json.funnelCandidates ?? []) as FunnelCandidate[];
+        setCandidates([...lineCandidates, ...demoFunnelCandidates]);
+      })
+      .catch(() => setCandidates(demoFunnelCandidates));
+  }, []);
+
   function handleMove(id: string, direction: "forward" | "backward") {
     setCandidates((prev) =>
       prev.map((c) => {
@@ -150,9 +160,11 @@ export default function PipelinePage() {
     items: candidates.filter((c) => c.currentStage === stage),
   }));
 
-  const funnelCountByStage = Object.fromEntries(demoFunnelData.map((item) => [item.stage, item.count])) as Record<FunnelStage, number>;
-  const total = demoFunnelData[0].count;
-  const overallRate = ((demoFunnelData[demoFunnelData.length - 1].count / demoFunnelData[0].count) * 100).toFixed(1);
+  const funnelCountByStage = Object.fromEntries(
+    stageGroups.map((group) => [group.stage, group.items.length])
+  ) as Record<FunnelStage, number>;
+  const total = candidates.length;
+  const overallRate = total ? ((stageGroups[stageGroups.length - 1].items.length / total) * 100).toFixed(1) : "0.0";
 
   return (
     <>
@@ -225,8 +237,8 @@ export default function PipelinePage() {
           <div className="hidden lg:flex items-stretch gap-0 overflow-x-auto pb-2">
             {stageGroups.map((group, i) => {
               const colors = stageColors[group.stage];
-              const prevCount = i > 0 ? demoFunnelData[i - 1]?.count : null;
-              const currentFunnelCount = demoFunnelData[i]?.count ?? 0;
+              const prevCount = i > 0 ? stageGroups[i - 1]?.items.length : null;
+              const currentFunnelCount = group.items.length;
               const rate = prevCount ? ((currentFunnelCount / prevCount) * 100).toFixed(0) : null;
 
               return (
@@ -255,8 +267,8 @@ export default function PipelinePage() {
           <div className="hidden md:flex lg:hidden items-center gap-1 overflow-x-auto pb-2">
             {stageGroups.map((group, i) => {
               const colors = stageColors[group.stage];
-              const prevCount = i > 0 ? demoFunnelData[i - 1]?.count : null;
-              const currentFunnelCount = demoFunnelData[i]?.count ?? 0;
+              const prevCount = i > 0 ? stageGroups[i - 1]?.items.length : null;
+              const currentFunnelCount = group.items.length;
               const rate = prevCount ? ((currentFunnelCount / prevCount) * 100).toFixed(0) : null;
               return (
                 <div key={group.stage} className="flex items-center">
@@ -275,10 +287,10 @@ export default function PipelinePage() {
           <div className="md:hidden space-y-2">
             {stageGroups.map((group, i) => {
               const colors = stageColors[group.stage];
-              const prevCount = i > 0 ? demoFunnelData[i - 1]?.count : null;
-              const currentFunnelCount = demoFunnelData[i]?.count ?? 0;
+              const prevCount = i > 0 ? stageGroups[i - 1]?.items.length : null;
+              const currentFunnelCount = group.items.length;
               const rate = prevCount ? ((currentFunnelCount / prevCount) * 100).toFixed(0) : null;
-              const barWidth = (currentFunnelCount / demoFunnelData[0].count) * 100;
+              const barWidth = total ? (currentFunnelCount / total) * 100 : 0;
 
               return (
                 <div key={group.stage}>

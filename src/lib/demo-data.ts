@@ -28,13 +28,91 @@ export const demoMembers = [
     name: "山田 花子",
     email: "hanako@example.com",
     role: "owner",
+    roleLabel: "オーナー",
+    permissions: ["ユーザー管理", "LINE管理", "履歴書閲覧", "履歴書編集"],
     createdAt: "2026-04-01",
   },
   {
     name: "田中 一郎",
     email: "ichiro@example.com",
-    role: "member",
+    role: "recruiter",
+    roleLabel: "採用担当",
+    permissions: ["履歴書閲覧", "履歴書編集"],
     createdAt: "2026-04-03",
+  },
+  {
+    name: "現場責任者",
+    email: "site-lead@example.com",
+    role: "viewer",
+    roleLabel: "閲覧のみ",
+    permissions: ["履歴書閲覧"],
+    createdAt: "2026-04-05",
+  },
+];
+
+export const memberRoleMatrix = [
+  {
+    role: "owner",
+    label: "オーナー",
+    description: "全設定・請求・ユーザー・LINE・履歴書にアクセス可能",
+    permissions: ["ユーザー管理", "LINE管理", "履歴書閲覧", "履歴書編集"],
+  },
+  {
+    role: "admin",
+    label: "管理者",
+    description: "運用責任者。ユーザー/LINE/履歴書を管理可能",
+    permissions: ["ユーザー管理", "LINE管理", "履歴書閲覧", "履歴書編集"],
+  },
+  {
+    role: "recruiter",
+    label: "採用担当",
+    description: "候補者対応・履歴書確認・選考更新を担当",
+    permissions: ["履歴書閲覧", "履歴書編集"],
+  },
+  {
+    role: "viewer",
+    label: "閲覧のみ",
+    description: "現場確認用。履歴書と選考状況の閲覧のみ",
+    permissions: ["履歴書閲覧"],
+  },
+];
+
+export const demoResumes = [
+  {
+    id: "rs-1",
+    student: "佐藤 拓海",
+    school: "長野工業高校",
+    department: "機械科",
+    title: "履歴書・志望理由書",
+    status: "解析済み",
+    access: "採用担当以上",
+    updatedAt: "2026-04-06",
+    summary: "機械加工実習とロボット製作経験が強み。製造オペレーター志望。",
+    highlights: ["旋盤・フライス実習", "技能検定3級に挑戦中", "同校OBの入社実績あり"],
+  },
+  {
+    id: "rs-2",
+    student: "小林 美咲",
+    school: "松本工業高校",
+    department: "電気科",
+    title: "履歴書PDF",
+    status: "確認待ち",
+    access: "採用担当以上",
+    updatedAt: "2026-04-05",
+    summary: "品質管理志望。計測実習・資格欄の確認が必要。",
+    highlights: ["計測機器の実習経験", "通勤条件一致", "成績証明書待ち"],
+  },
+  {
+    id: "rs-3",
+    student: "中村 颯",
+    school: "諏訪実業高校",
+    department: "工業技術科",
+    title: "応募フォーム回答",
+    status: "未アップロード",
+    access: "採用担当以上",
+    updatedAt: "2026-04-03",
+    summary: "LINE応募のみ。履歴書PDFの提出依頼が必要。",
+    highlights: ["ロボット部", "機械保全志望", "提出リマインド対象"],
   },
 ];
 

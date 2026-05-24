@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { buildAutoReply, createLineApplicant } from "@/lib/line-recruiting";
+import { saveLineApplicant } from "@/lib/line-applicant-store";
+import { buildAutoReply } from "@/lib/line-recruiting";
 
 type LineMessageEvent = {
   type: "message";
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
     const userId = event.source?.userId;
 
     if (event.type === "follow" && event.replyToken) {
-      createLineApplicant({ lineUserId: userId ?? "unknown", currentStage: "LINE流入", step: "welcome" });
+      saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: "LINE流入", step: "welcome" });
       await replyText(event.replyToken, buildAutoReply("応募", baseUrl, userId));
       handled.push("follow");
       continue;
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
       const messageEvent = event as LineMessageEvent;
       if (messageEvent.message.type !== "text") continue;
       const text = messageEvent.message.text ?? "";
-      createLineApplicant({ lineUserId: userId ?? "unknown", currentStage: text.includes("応募") ? "応募" : "LINE流入", lastMessage: text });
+      saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: text.includes("応募") ? "応募" : "LINE流入", lastMessage: text });
       await replyText(messageEvent.replyToken, buildAutoReply(text, baseUrl, userId));
       handled.push("message");
       continue;
