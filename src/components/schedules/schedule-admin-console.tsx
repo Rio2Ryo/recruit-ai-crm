@@ -32,6 +32,7 @@ type ScheduleEvent = {
       lineUserId?: string;
       applicantName?: string;
       note?: string;
+      status?: string;
     }[];
   }[];
 };
@@ -97,24 +98,36 @@ export function ScheduleAdminConsole() {
     };
   }, [role]);
 
-  async function postJson(path: string, body: Record<string, unknown>) {
+  async function requestJson(path: string, method: "POST" | "PATCH" | "DELETE", body?: Record<string, unknown>) {
     const response = await fetch(path, {
-      method: "POST",
+      method,
       headers: {
         "content-type": "application/json",
         "x-rbac-role": role,
       },
-      body: JSON.stringify(body),
+      body: body ? JSON.stringify(body) : undefined,
     });
     const json = await response.json();
     if (!response.ok) {
       setMessage(`保存できませんでした: ${json.error ?? response.status}`);
       return false;
     }
-    setMessage("保存しました。");
+    setMessage(method === "DELETE" ? "削除しました。" : "保存しました。");
     const nextEvents = await fetchScheduleEvents(role);
     setEvents(nextEvents);
     return true;
+  }
+
+  async function postJson(path: string, body: Record<string, unknown>) {
+    return requestJson(path, "POST", body);
+  }
+
+  async function patchJson(path: string, body: Record<string, unknown>) {
+    return requestJson(path, "PATCH", body);
+  }
+
+  async function deleteJson(path: string) {
+    return requestJson(path, "DELETE");
   }
 
   async function createEvent(event: FormEvent<HTMLFormElement>) {
@@ -157,6 +170,19 @@ export function ScheduleAdminConsole() {
       status: "booked",
     });
     if (ok) event.currentTarget.reset();
+  }
+
+  async function deleteEvent(eventId: string) {
+    if (!window.confirm("このイベントと紐づく枠/予約を削除します。よろしいですか？")) return;
+    await deleteJson(`/api/schedules/events?eventId=${encodeURIComponent(eventId)}`);
+  }
+
+  async function updateSlotStatus(slotId: string, status: string) {
+    await patchJson("/api/schedules/slots", { slotId, status });
+  }
+
+  async function cancelBooking(bookingId: string) {
+    await patchJson("/api/schedules/bookings", { bookingId, status: "cancelled" });
   }
 
   return (
@@ -358,9 +384,14 @@ export function ScheduleAdminConsole() {
                     担当: {event.ownerName ?? "未設定"} / 締切: {event.deadlineAt ? formatDateTime(event.deadlineAt) : "未設定"}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                  <ShieldCheck className="size-4 text-slate-500" />
-                  {event.slots.length}枠
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    <ShieldCheck className="size-4 text-slate-500" />
+                    {event.slots.length}枠
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={() => deleteEvent(event.id)}>
+                    削除
+                  </Button>
                 </div>
               </div>
               <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -370,9 +401,20 @@ export function ScheduleAdminConsole() {
                       <div className="font-medium text-gray-900">
                         {formatDateTime(slot.startsAt)} - {formatDateTime(slot.endsAt)}
                       </div>
-                      <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700">
-                        {slot.bookedCount}/{slot.capacity}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+                          {slot.bookedCount}/{slot.capacity}・{slot.status}
+                        </span>
+                        {slot.status === "cancelled" || slot.status === "closed" ? (
+                          <Button type="button" variant="outline" size="sm" onClick={() => updateSlotStatus(slot.id, "open")}>
+                            再開
+                          </Button>
+                        ) : (
+                          <Button type="button" variant="outline" size="sm" onClick={() => updateSlotStatus(slot.id, "cancelled")}>
+                            キャンセル
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <div className="mt-3 space-y-2">
                       {slot.bookings.length === 0 ? (
@@ -383,6 +425,14 @@ export function ScheduleAdminConsole() {
                             <div className="flex items-center gap-2 font-medium text-gray-900">
                               <CheckCircle2 className="size-3.5 text-emerald-600" />
                               {booking.applicantName || booking.lineUserId || booking.applicantId || "応募者未設定"}
+                            </div>
+                            <div className="mt-1 flex items-center justify-between gap-2">
+                              <span className="text-xs text-gray-500">status: {booking.status ?? "booked"}</span>
+                              {(booking.status ?? "booked") !== "cancelled" && (
+                                <Button type="button" variant="outline" size="sm" onClick={() => cancelBooking(booking.id)}>
+                                  予約キャンセル
+                                </Button>
+                              )}
                             </div>
                             {booking.note && <p className="mt-1 text-xs text-gray-500">{booking.note}</p>}
                           </div>

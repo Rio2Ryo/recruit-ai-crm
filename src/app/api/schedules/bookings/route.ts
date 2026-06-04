@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createScheduleBooking, listScheduleEvents, type ScheduleEvent } from "@/lib/scheduling";
+import { createScheduleBooking, listScheduleEvents, updateScheduleBookingStatus, type ScheduleEvent } from "@/lib/scheduling";
 import { getRoleFromRequest, roleHasPermission } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
@@ -37,5 +37,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: booking.error }, { status: 409 });
   }
 
+  return NextResponse.json({ ok: true, role: role.id, booking });
+}
+
+export async function PATCH(request: NextRequest) {
+  const role = getRoleFromRequest(request);
+  if (!roleHasPermission(role, "schedule:book") && !roleHasPermission(role, "schedule:manage")) {
+    return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
+  }
+
+  const input = await request.json().catch(() => ({}));
+  const booking = await updateScheduleBookingStatus(input);
+  if (!booking) return NextResponse.json({ ok: false, error: "booking not found" }, { status: 404 });
   return NextResponse.json({ ok: true, role: role.id, booking });
 }

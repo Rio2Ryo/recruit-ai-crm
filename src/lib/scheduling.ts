@@ -311,6 +311,27 @@ function createScheduleEventInMemory(input: {
   return event;
 }
 
+export async function deleteScheduleEvent(eventId?: string) {
+  if (!eventId) return false;
+  if (shouldUseMemoryFallback()) {
+    const items = store();
+    const index = items.findIndex((event) => event.id === eventId);
+    if (index === -1) return false;
+    items.splice(index, 1);
+    return true;
+  }
+
+  try {
+    await prisma.scheduleEventRecord.delete({ where: { id: eventId } });
+    return true;
+  } catch (error) {
+    if (markDbUnavailable(error)) return deleteScheduleEvent(eventId);
+    const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+    if (code === "P2025") return false;
+    throw error;
+  }
+}
+
 export async function createScheduleSlot(input: {
   eventId?: string;
   startsAt?: string;
@@ -370,6 +391,31 @@ function createScheduleSlotInMemory(input: {
   return slot;
 }
 
+export async function updateScheduleSlotStatus(input: { slotId?: string; status?: ScheduleSlotStatus }) {
+  if (!input.slotId || !input.status) return null;
+  if (shouldUseMemoryFallback()) {
+    const slot = store().flatMap((event) => event.slots).find((item) => item.id === input.slotId);
+    if (!slot) return null;
+    slot.status = input.status;
+    slot.updatedAt = now();
+    return refreshSlot(slot);
+  }
+
+  try {
+    const record = await prisma.scheduleSlotRecord.update({
+      where: { id: input.slotId },
+      data: { status: input.status },
+      include: { bookings: true },
+    });
+    return toScheduleSlot(record);
+  } catch (error) {
+    if (markDbUnavailable(error)) return updateScheduleSlotStatus(input);
+    const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+    if (code === "P2025") return null;
+    throw error;
+  }
+}
+
 export async function createScheduleBooking(input: {
   slotId?: string;
   applicantId?: string;
@@ -417,6 +463,50 @@ export async function createScheduleBooking(input: {
     return toScheduleBooking(booking);
   } catch (error) {
     if (markDbUnavailable(error)) return createScheduleBookingInMemory(input);
+    throw error;
+  }
+}
+
+export async function updateScheduleBookingStatus(input: { bookingId?: string; status?: ScheduleBookingStatus }) {
+  if (!input.bookingId || !input.status) return null;
+  if (shouldUseMemoryFallback()) {
+    for (const event of store()) {
+      for (const slot of event.slots) {
+        const booking = slot.bookings.find((item) => item.id === input.bookingId);
+        if (!booking) continue;
+        booking.status = input.status;
+        booking.updatedAt = now();
+        const updatedSlot = refreshSlot(slot);
+        Object.assign(slot, updatedSlot);
+        return booking;
+      }
+    }
+    return null;
+  }
+
+  try {
+    const booking = await prisma.scheduleBookingRecord.update({
+      where: { id: input.bookingId },
+      data: { status: input.status },
+    });
+    const slot = await prisma.scheduleSlotRecord.findUnique({ where: { id: booking.slotId } });
+    if (slot) {
+      const bookedCount = await prisma.scheduleBookingRecord.count({
+        where: { slotId: slot.id, status: "booked" },
+      });
+      await prisma.scheduleSlotRecord.update({
+        where: { id: slot.id },
+        data: {
+          bookedCount,
+          status: slot.status === "full" && bookedCount < slot.capacity ? "open" : slot.status,
+        },
+      });
+    }
+    return toScheduleBooking(booking);
+  } catch (error) {
+    if (markDbUnavailable(error)) return updateScheduleBookingStatus(input);
+    const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+    if (code === "P2025") return null;
     throw error;
   }
 }
