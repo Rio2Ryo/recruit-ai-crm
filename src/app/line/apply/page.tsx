@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,6 +22,14 @@ function LineApplyForm() {
     jobId: demoJobs[0].id,
     selfPr: "",
   });
+
+  useEffect(() => {
+    fetch("/api/line/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lineUserId, type: "form_view", label: "応募フォーム表示" }),
+    }).catch(() => undefined);
+  }, [lineUserId]);
 
   function update(field: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));

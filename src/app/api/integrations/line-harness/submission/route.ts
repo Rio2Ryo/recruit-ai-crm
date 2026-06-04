@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveLineApplicant } from "@/lib/line-applicant-store";
 import { getLineHarnessClient, getStringField, type LineHarnessFormSubmission } from "@/lib/line-harness";
+import { scheduleRuleMessagesForApplicant } from "@/lib/line-scheduler";
 
 function isAuthorized(request: NextRequest) {
   const secret = process.env.LINE_HARNESS_WEBHOOK_SECRET;
   if (!secret) return true;
 
   return request.headers.get("x-line-harness-secret") === secret;
+}
+
+function getBaseUrl(request: NextRequest) {
+  return process.env.NEXT_PUBLIC_APP_URL ?? `${request.nextUrl.protocol}//${request.nextUrl.host}`;
 }
 
 export async function GET() {
@@ -28,8 +33,9 @@ export async function POST(request: NextRequest) {
     "submission" in payload && payload.submission ? payload.submission : (payload as LineHarnessFormSubmission);
   const data = submission.data ?? {};
 
-  const applicant = saveLineApplicant({
+  const applicant = await saveLineApplicant({
     lineUserId: submission.lineUserId ?? submission.friendId ?? "line-harness-friend",
+    friendId: submission.friendId,
     name: getStringField(data, ["name", "氏名", "fullName", "お名前"]),
     school: getStringField(data, ["school", "学校名", "schoolName"]),
     department: getStringField(data, ["department", "学科", "学部・学科"]),
@@ -64,5 +70,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, applicant, harnessUpdates });
+  const schedules = await scheduleRuleMessagesForApplicant(getBaseUrl(request), applicant, "応募");
+
+  return NextResponse.json({ ok: true, applicant, harnessUpdates, schedules });
 }

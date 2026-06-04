@@ -1,33 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveLineApplicant } from "@/lib/line-applicant-store";
+import { recordLineAction, saveLineApplicant } from "@/lib/line-applicant-store";
+import { scheduleRuleMessagesForApplicant } from "@/lib/line-scheduler";
+import { sendLineMessageForApplicant } from "@/lib/line-workflow";
 
-async function pushText(userId: string, text: string) {
-  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  if (!token) return { skipped: true, reason: "LINE_CHANNEL_ACCESS_TOKEN is not set" };
-
-  const response = await fetch("https://api.line.me/v2/bot/message/push", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      to: userId,
-      messages: [{ type: "text", text }],
-    }),
-  });
-
-  if (!response.ok) {
-    return { skipped: false, ok: false, status: response.status, detail: await response.text() };
-  }
-
-  return { skipped: false, ok: true };
+function getBaseUrl(request: NextRequest) {
+  return process.env.NEXT_PUBLIC_APP_URL ?? `${request.nextUrl.protocol}//${request.nextUrl.host}`;
 }
 
 export async function POST(request: NextRequest) {
   const input = await request.json();
-  const applicant = saveLineApplicant({
+  const applicant = await saveLineApplicant({
     lineUserId: input.lineUserId || "demo-line-user",
+    friendId: input.friendId,
     name: input.name,
     school: input.school,
     department: input.department,
@@ -38,12 +22,23 @@ export async function POST(request: NextRequest) {
     currentStage: "応募",
   });
 
-  const messageResult = input.lineUserId
-    ? await pushText(
-        input.lineUserId,
-        `${applicant.name ?? "応募者"}さん、応募を受け付けました。\n担当者が確認後、面接・見学の日程をこのLINEでご連絡します。`
-      )
-    : { skipped: true, reason: "lineUserId is empty; demo applicant accepted only" };
+  await recordLineAction({
+    applicantId: applicant.id,
+    lineUserId: applicant.lineUserId,
+    friendId: applicant.friendId,
+    type: "form_submit",
+    label: "LINE応募フォーム送信",
+    detail: { jobId: input.jobId, school: input.school, department: input.department },
+  });
 
-  return NextResponse.json({ ok: true, applicant, messageResult });
+  const messageResult = await sendLineMessageForApplicant(
+    applicant,
+    `${applicant.name ?? "応募者"}さん、応募を受け付けました。\n担当者が確認後、面接・見学の日程をこのLINEでご連絡します。`,
+    "auto",
+    { templateId: "apply-thanks", stage: "応募" }
+  );
+
+  const schedules = await scheduleRuleMessagesForApplicant(getBaseUrl(request), applicant, "応募");
+
+  return NextResponse.json({ ok: true, applicant, messageResult, schedules, baseUrl: getBaseUrl(request) });
 }
