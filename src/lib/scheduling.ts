@@ -249,6 +249,27 @@ export async function listScheduleEvents() {
   }
 }
 
+function isPublicEventBookable(event: ScheduleEvent) {
+  return event.isPublic && (!event.deadlineAt || new Date(event.deadlineAt).getTime() >= Date.now());
+}
+
+function isPublicSlotBookable(slot: ScheduleSlot) {
+  return slot.status === "open" && slot.bookedCount < slot.capacity && new Date(slot.startsAt).getTime() >= Date.now();
+}
+
+export async function listPublicScheduleEvents() {
+  const events = await listScheduleEvents();
+  return events
+    .filter(isPublicEventBookable)
+    .map((event) => ({
+      ...event,
+      slots: event.slots
+        .filter(isPublicSlotBookable)
+        .map((slot) => ({ ...slot, bookings: [] })),
+    }))
+    .filter((event) => event.slots.length > 0);
+}
+
 export async function createScheduleEvent(input: {
   type?: ScheduleEventType;
   title?: string;
@@ -412,6 +433,46 @@ export async function updateScheduleSlotStatus(input: { slotId?: string; status?
     if (markDbUnavailable(error)) return updateScheduleSlotStatus(input);
     const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
     if (code === "P2025") return null;
+    throw error;
+  }
+}
+
+export async function createPublicScheduleBooking(input: {
+  slotId?: string;
+  applicantId?: string;
+  lineUserId?: string;
+  applicantName?: string;
+  note?: string;
+}) {
+  const applicantName = input.applicantName?.trim();
+  if (!applicantName) return { error: "applicantName is required" as const };
+
+  if (shouldUseMemoryFallback()) {
+    const event = store().find((item) => item.slots.some((slot) => slot.id === input.slotId));
+    const slot = event?.slots.find((item) => item.id === input.slotId);
+    if (!event || !slot) return null;
+    if (!isPublicEventBookable(event) || !isPublicSlotBookable(refreshSlot(slot))) {
+      return { error: "slot is not publicly bookable" as const };
+    }
+    return createScheduleBookingInMemory({ ...input, applicantName, status: "booked" });
+  }
+
+  try {
+    const slot = await prisma.scheduleSlotRecord.findUnique({
+      where: { id: input.slotId },
+      include: { event: true, bookings: true },
+    });
+    if (!slot) return null;
+
+    const event = toScheduleEvent({ ...slot.event, slots: [] });
+    const refreshedSlot = toScheduleSlot(slot);
+    if (!isPublicEventBookable(event) || !isPublicSlotBookable(refreshedSlot)) {
+      return { error: "slot is not publicly bookable" as const };
+    }
+
+    return createScheduleBooking({ ...input, applicantName, status: "booked" });
+  } catch (error) {
+    if (markDbUnavailable(error)) return createPublicScheduleBooking(input);
     throw error;
   }
 }
