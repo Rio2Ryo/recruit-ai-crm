@@ -172,6 +172,65 @@ export function ScheduleAdminConsole() {
     if (ok) event.currentTarget.reset();
   }
 
+  async function createTestPublicSchedule() {
+    const startsAt = new Date();
+    startsAt.setDate(startsAt.getDate() + 7);
+    startsAt.setHours(14, 0, 0, 0);
+    const endsAt = new Date(startsAt);
+    endsAt.setHours(15, 0, 0, 0);
+    const deadlineAt = new Date();
+    deadlineAt.setDate(deadlineAt.getDate() + 14);
+    deadlineAt.setHours(23, 59, 0, 0);
+
+    const response = await fetch("/api/schedules/events", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-rbac-role": role,
+      },
+      body: JSON.stringify({
+        type: "briefing",
+        title: "【テスト】会社説明会・面接予約テスト",
+        description: "動作確認用の公開枠です。実際の面接/説明会ではありません。",
+        location: "オンライン（テスト）",
+        onlineUrl: "https://meet.example.com/recruit-test",
+        ownerName: "採用担当（テスト）",
+        isPublic: true,
+        deadlineAt: deadlineAt.toISOString(),
+      }),
+    });
+    const json = await response.json();
+    if (!response.ok || !json.event?.id) {
+      setMessage(`テスト枠を作成できませんでした: ${json.error ?? response.status}`);
+      return;
+    }
+
+    const slotResponse = await fetch("/api/schedules/slots", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-rbac-role": role,
+      },
+      body: JSON.stringify({
+        eventId: json.event.id,
+        startsAt: startsAt.toISOString(),
+        endsAt: endsAt.toISOString(),
+        capacity: 5,
+      }),
+    });
+    const slotJson = await slotResponse.json();
+    if (!slotResponse.ok) {
+      setMessage(`テスト枠の時間を作成できませんでした: ${slotJson.error ?? slotResponse.status}`);
+      return;
+    }
+
+    setMessage("テスト用公開枠を作成しました。公開予約ページ /schedule から予約できます。");
+    const nextEvents = await fetchScheduleEvents(role);
+    setEvents(nextEvents);
+    setSelectedEventId(json.event.id);
+    setSelectedSlotId(slotJson.slot?.id ?? "");
+  }
+
   async function deleteEvent(eventId: string) {
     if (!window.confirm("このイベントと紐づく枠/予約を削除します。よろしいですか？")) return;
     await deleteJson(`/api/schedules/events?eventId=${encodeURIComponent(eventId)}`);
@@ -195,8 +254,21 @@ export function ScheduleAdminConsole() {
           </div>
           <h2 className="mt-2 text-lg font-semibold text-gray-950">採用日程の作成・予約管理</h2>
           <p className="mt-1 text-sm leading-6 text-gray-600">
-            面接/説明会イベント、開催枠、応募者ごとの予約を管理します。現段階は管理画面中心で、DB永続化 migration を本番適用後に公開予約フォームへ拡張できます。
+            面接/説明会イベント、開催枠、応募者ごとの予約を管理します。公開予約フォームと連動し、テスト用公開枠もすぐ作成できます。
           </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={createTestPublicSchedule}>
+              テスト用公開枠を作成
+            </Button>
+            <a
+              href="/schedule"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-8 items-center justify-center rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+            >
+              公開予約ページを開く
+            </a>
+          </div>
         </div>
         <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-4">
           <Label htmlFor="role-preview" className="text-indigo-900">
