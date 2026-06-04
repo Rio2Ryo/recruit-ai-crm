@@ -84,12 +84,13 @@ model Company {
   photos         CompanyPhoto[]
   interviews     CompanyInterview[]
   jobs           Job[]
-  schools        School[]
-  students       Student[]
-  studentFiles   StudentFile[]
-  resumes        Resume[]
-  applications   Application[]
-  matchingScores MatchingScore[]
+  schools                 School[]
+  schoolActivities        SchoolActivity[]
+  students                Student[]
+  studentFiles            StudentFile[]
+  resumes                 Resume[]
+  applications            Application[]
+  matchingScores          MatchingScore[]
   lineIntegrationSettings LineIntegrationSettings?
 
   @@index([slug])
