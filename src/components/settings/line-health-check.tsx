@@ -23,7 +23,7 @@ export function LineHealthCheck() {
   const [to, setTo] = useState("");
   const [text, setText] = useState("採用CRMからのLINEテスト送信です。");
 
-  async function run(action: "status" | "webhook-self-test" | "push-test") {
+  async function run(action: "status" | "harness-status" | "webhook-self-test" | "push-test") {
     setLoading(action);
     try {
       const response =
@@ -50,7 +50,7 @@ export function LineHealthCheck() {
         <h2 className="text-base font-bold text-gray-950">疎通確認・テスト送信</h2>
       </div>
       <p className="mt-2 text-sm leading-6 text-gray-600">
-        設定状態、Webhook受信経路、LINE Push送信を確認できます。送信系の操作には管理キーが必要です。
+        設定状態、Harness API接続、submission webhook受信、Harness経由のLINE送信を確認できます。
       </p>
 
       <div className="mt-4 max-w-md">
@@ -71,16 +71,20 @@ export function LineHealthCheck() {
           {loading === "status" ? <Loader2 className="size-4 animate-spin" /> : <Activity className="size-4" />}
           設定状態を確認
         </Button>
+        <Button type="button" variant="outline" onClick={() => run("harness-status")} disabled={Boolean(loading) || !adminKey}>
+          {loading === "harness-status" ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+          Harness接続確認
+        </Button>
         <Button type="button" variant="outline" onClick={() => run("webhook-self-test")} disabled={Boolean(loading) || !adminKey}>
           {loading === "webhook-self-test" ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
-          Webhook経路テスト
+          Harness応募受信テスト
         </Button>
       </div>
 
       <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
         <div>
-          <Label htmlFor="line-test-to">送信先LINE userId</Label>
-          <Input id="line-test-to" className="mt-2" value={to} onChange={(event) => setTo(event.target.value)} placeholder="Uxxxxxxxx" />
+          <Label htmlFor="line-test-to">送信先Harness friendId</Label>
+          <Input id="line-test-to" className="mt-2" value={to} onChange={(event) => setTo(event.target.value)} placeholder="friend_xxxxxxxx" />
         </div>
         <div>
           <Label htmlFor="line-test-text">テスト文面</Label>

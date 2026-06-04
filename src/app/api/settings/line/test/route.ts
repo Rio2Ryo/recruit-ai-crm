@@ -1,5 +1,5 @@
-import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { getLineHarnessClient } from "@/lib/line-harness";
 
 function getBaseUrl(request: NextRequest) {
   return process.env.NEXT_PUBLIC_APP_URL ?? `${request.nextUrl.protocol}//${request.nextUrl.host}`;
@@ -7,12 +7,6 @@ function getBaseUrl(request: NextRequest) {
 
 function maskError(error: unknown) {
   return error instanceof Error ? error.message.replace(/Bearer\s+[A-Za-z0-9._-]+/g, "Bearer [REDACTED]") : "unknown error";
-}
-
-function signBody(body: string) {
-  const secret = process.env.LINE_CHANNEL_SECRET;
-  if (!secret) return null;
-  return crypto.createHmac("sha256", secret).update(body).digest("base64");
 }
 
 function isAuthorized(request: NextRequest) {
@@ -23,7 +17,12 @@ function isAuthorized(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const baseUrl = getBaseUrl(request);
-  const required = ["LINE_CHANNEL_ACCESS_TOKEN", "LINE_CHANNEL_SECRET", "NEXT_PUBLIC_APP_URL"];
+  const required = [
+    "NEXT_PUBLIC_APP_URL",
+    "LINE_HARNESS_API_URL",
+    "LINE_HARNESS_API_KEY",
+    "LINE_HARNESS_WEBHOOK_SECRET",
+  ];
   const env = Object.fromEntries(required.map((name) => [name, Boolean(process.env[name]?.trim())]));
 
   return NextResponse.json({
@@ -34,6 +33,8 @@ export async function GET(request: NextRequest) {
       webhook: `${baseUrl}/api/line/webhook`,
       apply: `${baseUrl}/line/apply`,
       applicants: `${baseUrl}/api/line/applicants`,
+      harnessSubmission: `${baseUrl}/api/integrations/line-harness/submission`,
+      harnessSend: `${baseUrl}/api/integrations/line-harness/send`,
     },
   });
 }
@@ -49,24 +50,60 @@ export async function POST(request: NextRequest) {
   const input = (await request.json().catch(() => ({}))) as { action?: string; to?: string; text?: string };
   const baseUrl = getBaseUrl(request);
 
+  if (input.action === "harness-status") {
+    const client = getLineHarnessClient();
+    if (!client) {
+      return NextResponse.json(
+        { ok: false, error: "LINE_HARNESS_API_URL and LINE_HARNESS_API_KEY are required" },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const friends = await client.listFriends({ limit: 1 });
+      return NextResponse.json({
+        ok: true,
+        status: 200,
+        detail: JSON.stringify(
+          {
+            total: friends.total,
+            sampleCount: friends.items?.length ?? 0,
+            hasNextPage: friends.hasNextPage,
+          },
+          null,
+          2
+        ),
+      });
+    } catch (error) {
+      return NextResponse.json({ ok: false, error: maskError(error) }, { status: 502 });
+    }
+  }
+
   if (input.action === "webhook-self-test") {
     const body = JSON.stringify({
-      events: [
-        {
-          type: "message",
-          replyToken: "test-reply-token",
-          source: { type: "user", userId: "line-settings-test-user" },
-          message: { type: "text", text: "応募" },
+      submission: {
+        id: `line-settings-test-${Date.now()}`,
+        formId: "settings-self-test",
+        friendId: "settings-test-friend",
+        lineUserId: "settings-test-line-user",
+        submittedAt: new Date().toISOString(),
+        data: {
+          name: "LINE設定テスト",
+          school: "テスト高校",
+          department: "設定確認",
+          jobTitle: "設定確認",
+          selfPr: "LINE Harness submission webhook self-test",
         },
-      ],
+      },
     });
-    const signature = signBody(body);
 
-    const response = await fetch(`${baseUrl}/api/line/webhook`, {
+    const response = await fetch(`${baseUrl}/api/integrations/line-harness/submission`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(signature ? { "x-line-signature": signature } : {}),
+        ...(process.env.LINE_HARNESS_WEBHOOK_SECRET
+          ? { "x-line-harness-secret": process.env.LINE_HARNESS_WEBHOOK_SECRET }
+          : {}),
       },
       body,
     });
@@ -75,7 +112,7 @@ export async function POST(request: NextRequest) {
       ok: response.ok,
       status: response.status,
       detail: await response.text(),
-      note: "LINEの実replyTokenではないため、アクセストークン設定済み環境ではreply APIが失敗する場合があります。署名・受信経路の確認用です。",
+      note: "Harness submission webhookの受信・保存経路を確認します。外部送信は行いません。",
     });
   }
 
@@ -84,27 +121,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: "to and text are required" }, { status: 400 });
     }
 
-    const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "LINE_CHANNEL_ACCESS_TOKEN is not set" }, { status: 500 });
+    const client = getLineHarnessClient();
+    if (!client) {
+      return NextResponse.json(
+        { ok: false, error: "LINE_HARNESS_API_URL and LINE_HARNESS_API_KEY are required" },
+        { status: 500 }
+      );
     }
 
     try {
-      const response = await fetch("https://api.line.me/v2/bot/message/push", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: input.to,
-          messages: [{ type: "text", text: input.text }],
-        }),
-      });
-
-      return NextResponse.json({ ok: response.ok, status: response.status, detail: await response.text() }, { status: response.ok ? 200 : 502 });
+      const result = await client.sendMessage(input.to, input.text);
+      return NextResponse.json({ ok: true, status: 200, detail: JSON.stringify(result, null, 2) });
     } catch (error) {
-      return NextResponse.json({ ok: false, error: maskError(error) }, { status: 500 });
+      return NextResponse.json({ ok: false, error: maskError(error) }, { status: 502 });
     }
   }
 

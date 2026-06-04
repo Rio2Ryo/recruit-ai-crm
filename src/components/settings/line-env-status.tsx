@@ -61,7 +61,7 @@ export function LineEnvStatus() {
     };
   }, []);
 
-  async function runCheck(action: "status" | "webhook-self-test" | "push-test") {
+  async function runCheck(action: "status" | "harness-status" | "webhook-self-test" | "push-test") {
     setLoading(action);
     try {
       const response =
@@ -156,13 +156,13 @@ export function LineEnvStatus() {
             />
           </div>
           <div>
-            <Label htmlFor="line-test-to">送信先LINE userId</Label>
+          <Label htmlFor="line-test-to">送信先Harness friendId</Label>
             <Input
               id="line-test-to"
               className="mt-2"
               value={to}
               onChange={(event) => setTo(event.target.value)}
-              placeholder="Uxxxxxxxx"
+              placeholder="friend_xxxxxxxx"
             />
           </div>
           <Button type="button" variant="outline" onClick={() => runCheck("status")} disabled={Boolean(loading)}>
@@ -171,7 +171,7 @@ export function LineEnvStatus() {
           </Button>
         </div>
 
-        <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-end">
+        <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_auto_auto_auto] lg:items-end">
           <div>
             <Label htmlFor="line-test-text">テスト文面</Label>
             <Input
@@ -184,11 +184,20 @@ export function LineEnvStatus() {
           <Button
             type="button"
             variant="outline"
+            onClick={() => runCheck("harness-status")}
+            disabled={Boolean(loading) || !adminKey}
+          >
+            {loading === "harness-status" ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+            Harness接続確認
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => runCheck("webhook-self-test")}
             disabled={Boolean(loading) || !adminKey}
           >
             {loading === "webhook-self-test" ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
-            Webhook経路テスト
+            Harness応募受信テスト
           </Button>
           <Button
             type="button"
