@@ -31,14 +31,16 @@ export async function POST(request: NextRequest) {
     detail: { jobId: input.jobId, school: input.school, department: input.department },
   });
 
+  const scheduleUrl = `${getBaseUrl(request)}/schedule?lineUserId=${encodeURIComponent(applicant.lineUserId)}&applicantId=${encodeURIComponent(applicant.id)}${applicant.name ? `&name=${encodeURIComponent(applicant.name)}` : ""}`;
+
   const messageResult = await sendLineMessageForApplicant(
     applicant,
-    `${applicant.name ?? "応募者"}さん、応募を受け付けました。\n担当者が確認後、面接・見学の日程をこのLINEでご連絡します。`,
+    `${applicant.name ?? "応募者"}さん、応募を受け付けました。\n面接・見学の公開枠がある場合は、こちらから希望日時を予約できます。\n${scheduleUrl}`,
     "auto",
     { templateId: "apply-thanks", stage: "応募" }
   );
 
   const schedules = await scheduleRuleMessagesForApplicant(getBaseUrl(request), applicant, "応募");
 
-  return NextResponse.json({ ok: true, applicant, messageResult, schedules, baseUrl: getBaseUrl(request) });
+  return NextResponse.json({ ok: true, applicant, messageResult, schedules, scheduleUrl, baseUrl: getBaseUrl(request) });
 }

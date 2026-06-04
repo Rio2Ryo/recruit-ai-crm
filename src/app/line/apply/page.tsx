@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,7 @@ function LineApplyForm() {
   const searchParams = useSearchParams();
   const lineUserId = searchParams.get("lineUserId") ?? "";
   const [sent, setSent] = useState(false);
+  const [scheduleUrl, setScheduleUrl] = useState("/schedule");
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -43,8 +45,12 @@ function LineApplyForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, lineUserId }),
     });
+    const json = await response.json().catch(() => ({}));
     setLoading(false);
-    if (response.ok) setSent(true);
+    if (response.ok) {
+      setScheduleUrl(json.scheduleUrl ?? `/schedule?lineUserId=${encodeURIComponent(lineUserId)}`);
+      setSent(true);
+    }
   }
 
   if (sent) {
@@ -54,8 +60,14 @@ function LineApplyForm() {
           <p className="text-sm font-semibold text-[#06c755]">応募受付完了</p>
           <h1 className="mt-2 text-2xl font-bold text-gray-900">ご応募ありがとうございます</h1>
           <p className="mt-3 text-sm leading-6 text-gray-600">
-            担当者が内容を確認し、面接・会社見学の日程を公式LINEでご連絡します。
+            担当者が内容を確認します。公開中の面接・会社見学枠がある場合は、このまま希望日時を予約できます。
           </p>
+          <Link
+            href={scheduleUrl}
+            className="mt-6 inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#06c755] px-4 text-sm font-semibold text-white transition hover:bg-[#05b54d]"
+          >
+            面接・見学の日程を予約する
+          </Link>
         </Card>
       </main>
     );

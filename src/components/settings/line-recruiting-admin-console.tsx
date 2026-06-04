@@ -122,6 +122,7 @@ export function LineRecruitingAdminConsole() {
   const origin = getOrigin();
   const submissionWebhook = `${origin}/api/integrations/line-harness/submission`;
   const simpleApplyUrl = `${origin}/line/apply`;
+  const publicScheduleUrl = `${origin}/schedule`;
   const scheduledProcessUrl = `${origin}/api/line/scheduled/process`;
   const jobTitles = Array.from(new Set(applicants.map((applicant) => applicant.jobTitle ?? "希望職種未定"))).sort();
   const targetCount = recipientMode === "all"
@@ -588,6 +589,7 @@ export function LineRecruitingAdminConsole() {
               <h3 className="text-sm font-bold text-gray-950">Harnessに設定するURL</h3>
               <CopyRow label="応募送信Webhook" value={submissionWebhook} copied={copied} onCopy={copy} />
               <CopyRow label="簡易応募フォーム" value={simpleApplyUrl} copied={copied} onCopy={copy} />
+              <CopyRow label="公開日程予約フォーム" value={publicScheduleUrl} copied={copied} onCopy={copy} />
               <CopyRow label="予約送信Cron URL" value={scheduledProcessUrl} copied={copied} onCopy={copy} />
             </div>
             <div className="rounded-xl bg-white p-4 ring-1 ring-gray-200">
@@ -617,8 +619,8 @@ export function LineRecruitingAdminConsole() {
                 <li>1. 友だち追加URLを確認</li>
                 <li>2. Harness応募フォームURLを確認</li>
                 <li>3. Harness側に応募送信Webhookを設定</li>
-                <li>4. テスト応募がCRMへ入ることを確認</li>
-                <li>5. friendIdへテスト送信</li>
+                <li>4. /schedules で公開日程枠を作成</li>
+                <li>5. テスト応募→日程予約がCRMへ入ることを確認</li>
                 <li>6. /pipeline で選考ステージ管理</li>
               </ol>
             </div>
