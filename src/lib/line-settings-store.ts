@@ -35,7 +35,7 @@ export function getDefaultLineOperationalSettings(baseUrl: string): LineOperatio
     harnessDashboardUrl: "",
     harnessFormUrl: "",
     defaultApplyMessage:
-      "公式LINEから応募できます。応募フォームを開いて、氏名・学校名・希望職種を送信してください。",
+      `公式LINEから応募できます。応募フォームを開いて、氏名・学校名・希望職種を送信してください。\n応募後、公開中の日程があればこちらから面接・会社見学を予約できます: ${baseUrl.replace(/\/$/, "")}/schedule`,
     testFriendId: "",
     stageTagMapJson: JSON.stringify(
       [
@@ -52,8 +52,8 @@ export function getDefaultLineOperationalSettings(baseUrl: string): LineOperatio
     ),
     messageTemplatesJson: JSON.stringify(
       [
-        { id: "apply-thanks", title: "応募受付", body: "{{name}}さん、応募ありがとうございます。採用担当が確認してご連絡します。" },
-        { id: "apply-followup-1d", title: "応募1日後フォロー", body: "{{name}}さん、応募内容を確認中です。追加で質問があればこのLINEに返信してください。" },
+        { id: "apply-thanks", title: "応募受付", body: `{{name}}さん、応募ありがとうございます。公開中の日程があれば、こちらから面接・会社見学を予約できます: ${baseUrl.replace(/\/$/, "")}/schedule` },
+        { id: "apply-followup-1d", title: "応募1日後フォロー", body: `{{name}}さん、応募内容を確認中です。追加で質問があればこのLINEに返信してください。公開日程はこちらです: ${baseUrl.replace(/\/$/, "")}/schedule` },
         { id: "interview-reminder", title: "面接前日リマインド", body: "{{name}}さん、明日は面接日です。ご不明点があればこのLINEへ返信してください。" },
         { id: "document-request", title: "書類提出依頼", body: "選考に必要な書類をご提出ください。提出方法はこちらです: {{url}}" },
         { id: "offer-follow", title: "内定者フォロー", body: "内定おめでとうございます。入社までのご案内を順次お送りします。" },
@@ -98,7 +98,7 @@ export function getDefaultLineOperationalSettings(baseUrl: string): LineOperatio
     ),
     broadcastDraftsJson: JSON.stringify(
       [
-        { id: "open-company-visit", title: "会社見学案内", target: "tag:LINE流入", body: "会社見学の日程を公開しました。参加希望の方はこちらから予約してください。", status: "draft" },
+        { id: "open-company-visit", title: "会社見学案内", target: "tag:LINE流入", body: `会社見学の日程を公開しました。参加希望の方はこちらから予約してください: ${baseUrl.replace(/\/$/, "")}/schedule`, status: "draft" },
         { id: "deadline-reminder", title: "応募締切リマインド", target: "tag:未応募", body: "応募締切が近づいています。気になる方はフォームからエントリーしてください。", status: "draft" },
       ],
       null,
