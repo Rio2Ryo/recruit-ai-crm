@@ -152,3 +152,27 @@ LINE_HARNESS_WEBHOOK_SECRET=xxx
 - `friendId` と `lineUserId` のどちらを主キーにするかを早めに固定する。CRM側は `friendId` 優先、補助で `lineUserId` を保持するのが良い。
 - 一斉配信/ステップ配信は誤送信リスクがあるため、PoCでは応募受付・面接連絡・リマインダーに限定する。
 - 本番LINEアカウントの設定、Webhook設定、配信実行は外部影響があるので事前確認必須。
+
+## 2026-05-25 管理画面へ反映するHarness機能
+
+LINE Harness OSS READMEと既存連携コードを元に、採用CRMから扱う機能を以下に整理した。
+
+### Harnessの主要機能
+- 配信: ステップ配信、ブロードキャスト、予約/リマインダー、テンプレート、トラッキングリンク
+- CRM: 友だち管理、タグ、スコアリング、オペレーターチャット、Conversation Inbox、重複検出
+- マーケティング: リッチメニュー、LIFFフォーム、カレンダー予約、スタッフ管理
+- 自動化: IF-THENルール、自動返信、Webhook IN/OUT、通知ルール
+- マルチアカウント: 複数公式LINE、アカウント別配信、BAN検知、トラフィックプール
+- AI/API: SDK、MCP server、`GET /api/capabilities`
+
+### Recruit AI CRM管理画面で扱うもの
+- `/settings/line`: 機能一覧と運用設計を表示
+- `/api/settings/line/harness`: CRMからHarness APIを呼ぶ管理操作口
+  - `list-friends`: 友だち一覧取得、タグ絞り込み
+  - `send-message`: friendId指定の1:1送信
+  - `add-tag`: 応募/選考ステージ同期用タグ付与
+  - `set-metadata`: `recruitStage`, `recruitCandidateId`, `source` 等のmetadata更新
+- 既存: submission webhook、送信API、env保存、接続テスト、webhook self-test
+
+### Harness管理画面に残すもの
+ステップ配信、ブロードキャスト、リッチメニュー、フォーム作成、IF-THENルール、スタッフ/権限、BAN/マルチアカウント管理は、誤送信・外部影響が大きいため、まずはHarness管理画面で作成し、CRM側ではURL/運用状態/連携テストを管理する。
