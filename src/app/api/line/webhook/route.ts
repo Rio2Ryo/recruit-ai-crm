@@ -1,13 +1,20 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { saveLineApplicant } from "@/lib/line-applicant-store";
+import { addLineAttachment, recordLineAction, saveLineApplicant } from "@/lib/line-applicant-store";
+import { saveLineDocumentBytes } from "@/lib/line-document-storage";
 import { buildAutoReply } from "@/lib/line-recruiting";
 
 type LineMessageEvent = {
   type: "message";
   replyToken: string;
   source: { userId?: string; type: string };
-  message: { type: string; text?: string };
+  message: {
+    id?: string;
+    type: string;
+    text?: string;
+    fileName?: string;
+    contentProvider?: { type?: string; originalContentUrl?: string };
+  };
 };
 
 type LineFollowEvent = {
@@ -36,6 +43,23 @@ function verifySignature(body: string, signature: string | null) {
 
   const expected = crypto.createHmac("sha256", channelSecret).update(body).digest("base64");
   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+}
+
+async function saveLineContent(lineUserId: string, messageId: string, fileName?: string) {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) throw new Error("LINE_CHANNEL_ACCESS_TOKEN is not set; cannot download LINE attachment content");
+
+  const response = await fetch(`https://api-data.line.me/v2/bot/message/${messageId}/content`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`LINE content download failed: ${response.status} ${detail}`);
+  }
+
+  const mimeType = response.headers.get("content-type") ?? undefined;
+  const bytes = Buffer.from(await response.arrayBuffer());
+  return saveLineDocumentBytes({ lineUserId, messageId, fileName, mimeType, bytes });
 }
 
 async function replyText(replyToken: string, text: string) {
@@ -87,7 +111,8 @@ export async function POST(request: NextRequest) {
     const userId = event.source?.userId;
 
     if (event.type === "follow" && event.replyToken) {
-      saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: "LINE流入", step: "welcome" });
+      const applicant = await saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: "LINE流入", step: "welcome" });
+      await recordLineAction({ applicantId: applicant.id, lineUserId: applicant.lineUserId, type: "follow", label: "友だち追加" });
       await replyText(event.replyToken, buildAutoReply("応募", baseUrl, userId));
       handled.push("follow");
       continue;
@@ -95,9 +120,33 @@ export async function POST(request: NextRequest) {
 
     if (event.type === "message" && event.replyToken) {
       const messageEvent = event as LineMessageEvent;
-      if (messageEvent.message.type !== "text") continue;
+      if (messageEvent.message.type !== "text") {
+        if (userId) {
+          const messageId = messageEvent.message.id ?? `line-message-${Date.now()}`;
+          const stored = await saveLineContent(userId, messageId, messageEvent.message.fileName);
+          await addLineAttachment(userId, {
+            messageId,
+            type: ["image", "video", "audio", "file"].includes(messageEvent.message.type)
+              ? (messageEvent.message.type as "image" | "video" | "audio" | "file")
+              : "unknown",
+            fileName: messageEvent.message.fileName,
+            contentUrl: messageEvent.message.contentProvider?.originalContentUrl,
+            storageKey: stored?.storageKey,
+            storageUrl: stored?.storageUrl,
+            mimeType: stored?.mimeType,
+            size: stored?.size,
+          });
+        }
+        await replyText(
+          messageEvent.replyToken,
+          "履歴書・応募書類を受け付けました。採用担当が候補者情報に紐づけて確認します。"
+        );
+        handled.push("attachment");
+        continue;
+      }
       const text = messageEvent.message.text ?? "";
-      saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: text.includes("応募") ? "応募" : "LINE流入", lastMessage: text });
+      const applicant = await saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: text.includes("応募") ? "応募" : "LINE流入", lastMessage: text });
+      await recordLineAction({ applicantId: applicant.id, lineUserId: applicant.lineUserId, type: "message", label: text, detail: { intent: text.includes("応募") ? "apply" : "message" } });
       await replyText(messageEvent.replyToken, buildAutoReply(text, baseUrl, userId));
       handled.push("message");
       continue;
@@ -105,6 +154,8 @@ export async function POST(request: NextRequest) {
 
     if (event.type === "postback" && event.replyToken) {
       const postbackEvent = event as LinePostbackEvent;
+      const applicant = await saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: "LINE流入", lastMessage: postbackEvent.postback.data });
+      await recordLineAction({ applicantId: applicant.id, lineUserId: applicant.lineUserId, type: "postback", label: postbackEvent.postback.data });
       await replyText(postbackEvent.replyToken, buildAutoReply(postbackEvent.postback.data, baseUrl, userId));
       handled.push("postback");
     }
