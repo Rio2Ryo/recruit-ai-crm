@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   }
 
   const input = await request.json().catch(() => ({}));
-  const slot = createScheduleSlot(input);
+  const slot = await createScheduleSlot(input);
   if (!slot) {
     return NextResponse.json({ ok: false, error: "event not found" }, { status: 404 });
   }

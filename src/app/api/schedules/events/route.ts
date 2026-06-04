@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
   }
 
-  return NextResponse.json({ ok: true, role: role.id, events: listScheduleEvents() });
+  return NextResponse.json({ ok: true, role: role.id, events: await listScheduleEvents() });
 }
 
 export async function POST(request: NextRequest) {
@@ -18,6 +18,6 @@ export async function POST(request: NextRequest) {
   }
 
   const input = await request.json().catch(() => ({}));
-  const event = createScheduleEvent(input);
+  const event = await createScheduleEvent(input);
   return NextResponse.json({ ok: true, role: role.id, event });
 }

@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { prisma } from "@/lib/prisma";
 
 export type ScheduleEventType = "interview" | "briefing" | "other";
 export type ScheduleSlotStatus = "open" | "closed" | "full" | "cancelled";
@@ -47,7 +48,13 @@ export type ScheduleEvent = {
 
 const globalForScheduling = globalThis as unknown as {
   scheduleEvents?: ScheduleEvent[];
+  scheduleDbUnavailable?: boolean;
 };
+
+function hasDatabaseUrl() {
+  const value = process.env.DATABASE_URL;
+  return Boolean(value && value !== '""' && value !== "''");
+}
 
 function now() {
   return new Date().toISOString();
@@ -58,6 +65,115 @@ function inDays(days: number, hour: number) {
   value.setUTCDate(value.getUTCDate() + days);
   value.setUTCHours(hour, 0, 0, 0);
   return value.toISOString();
+}
+
+function toIso(value: Date | string | null | undefined) {
+  if (!value) return undefined;
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
+function toScheduleBooking(record: {
+  id: string;
+  slotId: string;
+  applicantId: string | null;
+  lineUserId: string | null;
+  applicantName: string | null;
+  status: string;
+  note: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): ScheduleBooking {
+  return {
+    id: record.id,
+    slotId: record.slotId,
+    applicantId: record.applicantId ?? undefined,
+    lineUserId: record.lineUserId ?? undefined,
+    applicantName: record.applicantName ?? undefined,
+    status: record.status as ScheduleBookingStatus,
+    note: record.note ?? undefined,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+  };
+}
+
+function refreshSlot(slot: ScheduleSlot) {
+  const bookedCount = slot.bookings.filter((booking) => booking.status === "booked").length;
+  const status: ScheduleSlotStatus = slot.status === "cancelled" || slot.status === "closed"
+    ? slot.status
+    : bookedCount >= slot.capacity
+      ? "full"
+      : "open";
+  return { ...slot, bookedCount, status };
+}
+
+function toScheduleSlot(record: {
+  id: string;
+  eventId: string;
+  startsAt: Date;
+  endsAt: Date;
+  capacity: number;
+  bookedCount: number;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  bookings?: Array<Parameters<typeof toScheduleBooking>[0]>;
+}): ScheduleSlot {
+  return refreshSlot({
+    id: record.id,
+    eventId: record.eventId,
+    startsAt: record.startsAt.toISOString(),
+    endsAt: record.endsAt.toISOString(),
+    capacity: record.capacity,
+    bookedCount: record.bookedCount,
+    status: record.status as ScheduleSlotStatus,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    bookings: (record.bookings ?? []).map(toScheduleBooking),
+  });
+}
+
+function toScheduleEvent(record: {
+  id: string;
+  type: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  onlineUrl: string | null;
+  ownerName: string | null;
+  isPublic: boolean;
+  deadlineAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  slots?: Array<Parameters<typeof toScheduleSlot>[0]>;
+}): ScheduleEvent {
+  return {
+    id: record.id,
+    type: record.type as ScheduleEventType,
+    title: record.title,
+    description: record.description ?? undefined,
+    location: record.location ?? undefined,
+    onlineUrl: record.onlineUrl ?? undefined,
+    ownerName: record.ownerName ?? undefined,
+    isPublic: record.isPublic,
+    deadlineAt: toIso(record.deadlineAt),
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    slots: (record.slots ?? []).map(toScheduleSlot).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+  };
+}
+
+function shouldFallback(error: unknown) {
+  const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+  return code === "P2021" || code === "P2022" || code === "42P01";
+}
+
+function markDbUnavailable(error: unknown) {
+  if (shouldFallback(error)) {
+    globalForScheduling.scheduleDbUnavailable = true;
+    console.warn("Schedule DB tables unavailable; using memory fallback", error);
+    return true;
+  }
+  return false;
 }
 
 function seedEvents(): ScheduleEvent[] {
@@ -102,24 +218,71 @@ function store() {
   return globalForScheduling.scheduleEvents;
 }
 
-function refreshSlot(slot: ScheduleSlot) {
-  const bookedCount = slot.bookings.filter((booking) => booking.status === "booked").length;
-  const status = slot.status === "cancelled"
-    ? slot.status
-    : bookedCount >= slot.capacity
-      ? "full"
-      : "open";
-  return { ...slot, bookedCount, status };
+function shouldUseMemoryFallback() {
+  return !hasDatabaseUrl() || globalForScheduling.scheduleDbUnavailable;
 }
 
-export function listScheduleEvents() {
+function listScheduleEventsFromMemory() {
   return store().map((event) => ({
     ...event,
     slots: event.slots.map(refreshSlot).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
   }));
 }
 
-export function createScheduleEvent(input: {
+export async function listScheduleEvents() {
+  if (shouldUseMemoryFallback()) return listScheduleEventsFromMemory();
+
+  try {
+    const records = await prisma.scheduleEventRecord.findMany({
+      orderBy: [{ createdAt: "desc" }],
+      include: {
+        slots: {
+          orderBy: [{ startsAt: "asc" }],
+          include: { bookings: { orderBy: [{ createdAt: "desc" }] } },
+        },
+      },
+    });
+    return records.map(toScheduleEvent);
+  } catch (error) {
+    if (markDbUnavailable(error)) return listScheduleEventsFromMemory();
+    throw error;
+  }
+}
+
+export async function createScheduleEvent(input: {
+  type?: ScheduleEventType;
+  title?: string;
+  description?: string;
+  location?: string;
+  onlineUrl?: string;
+  ownerName?: string;
+  isPublic?: boolean;
+  deadlineAt?: string;
+}) {
+  if (shouldUseMemoryFallback()) return createScheduleEventInMemory(input);
+
+  try {
+    const record = await prisma.scheduleEventRecord.create({
+      data: {
+        type: input.type ?? "interview",
+        title: input.title?.trim() || "新しい日程イベント",
+        description: input.description?.trim() || null,
+        location: input.location?.trim() || null,
+        onlineUrl: input.onlineUrl?.trim() || null,
+        ownerName: input.ownerName?.trim() || null,
+        isPublic: Boolean(input.isPublic),
+        deadlineAt: input.deadlineAt ? new Date(input.deadlineAt) : null,
+      },
+      include: { slots: { include: { bookings: true } } },
+    });
+    return toScheduleEvent(record);
+  } catch (error) {
+    if (markDbUnavailable(error)) return createScheduleEventInMemory(input);
+    throw error;
+  }
+}
+
+function createScheduleEventInMemory(input: {
   type?: ScheduleEventType;
   title?: string;
   description?: string;
@@ -148,7 +311,39 @@ export function createScheduleEvent(input: {
   return event;
 }
 
-export function createScheduleSlot(input: {
+export async function createScheduleSlot(input: {
+  eventId?: string;
+  startsAt?: string;
+  endsAt?: string;
+  capacity?: number;
+  status?: ScheduleSlotStatus;
+}) {
+  if (shouldUseMemoryFallback()) return createScheduleSlotInMemory(input);
+
+  try {
+    const event = await prisma.scheduleEventRecord.findUnique({ where: { id: input.eventId } });
+    if (!event) return null;
+
+    const startsAt = input.startsAt ? new Date(input.startsAt) : new Date();
+    const endsAt = input.endsAt ? new Date(input.endsAt) : startsAt;
+    const record = await prisma.scheduleSlotRecord.create({
+      data: {
+        eventId: event.id,
+        startsAt,
+        endsAt,
+        capacity: Math.max(1, Number(input.capacity) || 1),
+        status: input.status ?? "open",
+      },
+      include: { bookings: true },
+    });
+    return toScheduleSlot(record);
+  } catch (error) {
+    if (markDbUnavailable(error)) return createScheduleSlotInMemory(input);
+    throw error;
+  }
+}
+
+function createScheduleSlotInMemory(input: {
   eventId?: string;
   startsAt?: string;
   endsAt?: string;
@@ -175,7 +370,58 @@ export function createScheduleSlot(input: {
   return slot;
 }
 
-export function createScheduleBooking(input: {
+export async function createScheduleBooking(input: {
+  slotId?: string;
+  applicantId?: string;
+  lineUserId?: string;
+  applicantName?: string;
+  status?: ScheduleBookingStatus;
+  note?: string;
+}) {
+  if (shouldUseMemoryFallback()) return createScheduleBookingInMemory(input);
+
+  try {
+    const slot = await prisma.scheduleSlotRecord.findUnique({
+      where: { id: input.slotId },
+      include: { bookings: true },
+    });
+    if (!slot) return null;
+
+    const refreshed = toScheduleSlot(slot);
+    if (refreshed.status === "full" || refreshed.status === "cancelled" || refreshed.status === "closed") {
+      return { error: "slot is not bookable" as const };
+    }
+
+    const booking = await prisma.scheduleBookingRecord.create({
+      data: {
+        slotId: slot.id,
+        applicantId: input.applicantId?.trim() || null,
+        lineUserId: input.lineUserId?.trim() || null,
+        applicantName: input.applicantName?.trim() || null,
+        status: input.status ?? "booked",
+        note: input.note?.trim() || null,
+      },
+    });
+
+    const bookedCount = await prisma.scheduleBookingRecord.count({
+      where: { slotId: slot.id, status: "booked" },
+    });
+    await prisma.scheduleSlotRecord.update({
+      where: { id: slot.id },
+      data: {
+        bookedCount,
+        status: bookedCount >= slot.capacity ? "full" : slot.status === "full" ? "open" : slot.status,
+      },
+    });
+
+    return toScheduleBooking(booking);
+  } catch (error) {
+    if (markDbUnavailable(error)) return createScheduleBookingInMemory(input);
+    throw error;
+  }
+}
+
+function createScheduleBookingInMemory(input: {
   slotId?: string;
   applicantId?: string;
   lineUserId?: string;
@@ -188,7 +434,7 @@ export function createScheduleBooking(input: {
   if (!event || !slot) return null;
 
   const refreshed = refreshSlot(slot);
-  if (refreshed.status === "full" || refreshed.status === "cancelled") {
+  if (refreshed.status === "full" || refreshed.status === "cancelled" || refreshed.status === "closed") {
     return { error: "slot is not bookable" as const };
   }
 

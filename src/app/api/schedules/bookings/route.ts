@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createScheduleBooking, listScheduleEvents } from "@/lib/scheduling";
+import { createScheduleBooking, listScheduleEvents, type ScheduleEvent } from "@/lib/scheduling";
 import { getRoleFromRequest, roleHasPermission } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
   }
 
-  const bookings = listScheduleEvents().flatMap((event) =>
+  const bookings = (await listScheduleEvents()).flatMap((event: ScheduleEvent) =>
     event.slots.flatMap((slot) =>
       slot.bookings.map((booking) => ({
         ...booking,
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   }
 
   const input = await request.json().catch(() => ({}));
-  const booking = createScheduleBooking(input);
+  const booking = await createScheduleBooking(input);
   if (!booking) {
     return NextResponse.json({ ok: false, error: "slot not found" }, { status: 404 });
   }
