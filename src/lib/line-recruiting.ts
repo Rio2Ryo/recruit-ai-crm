@@ -2,9 +2,71 @@ import { demoJobs, funnelStages, type FunnelStage } from "@/lib/demo-data";
 
 export type LineRecruitingStep = "welcome" | "job_select" | "profile" | "submitted";
 
+export type LineAttachment = {
+  id: string;
+  lineUserId: string;
+  messageId: string;
+  type: "image" | "video" | "audio" | "file" | "unknown";
+  fileName?: string;
+  contentUrl?: string;
+  storageKey?: string;
+  storageUrl?: string;
+  mimeType?: string;
+  size?: number;
+  savedAt: string;
+};
+
+export type LineMessageLog = {
+  id: string;
+  applicantId: string;
+  lineUserId: string;
+  friendId?: string;
+  kind: "manual" | "step" | "auto" | "reply" | "scheduled";
+  templateId?: string;
+  stage?: FunnelStage;
+  text: string;
+  status: "sent" | "skipped" | "failed";
+  result?: unknown;
+  error?: string;
+  createdAt: string;
+};
+
+export type LineActionEvent = {
+  id: string;
+  applicantId?: string;
+  lineUserId: string;
+  friendId?: string;
+  type:
+    | "follow"
+    | "message"
+    | "postback"
+    | "form_view"
+    | "form_submit"
+    | "document_upload"
+    | "message_send"
+    | "step_send"
+    | "scheduled_message"
+    | "status_change";
+  label: string;
+  detail?: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type LineStepRun = {
+  id: string;
+  applicantId: string;
+  lineUserId: string;
+  friendId?: string;
+  templateIds: string[];
+  status: "completed" | "partial" | "failed";
+  createdAt: string;
+  logs: LineMessageLog[];
+};
+
 export type LineApplicant = {
   id: string;
   lineUserId: string;
+  friendId?: string;
   displayName?: string;
   name?: string;
   school?: string;
@@ -19,6 +81,12 @@ export type LineApplicant = {
   step: LineRecruitingStep;
   createdAt: string;
   updatedAt: string;
+  interviewAt?: string;
+  feedback?: string;
+  attachments?: LineAttachment[];
+  messageLogs?: LineMessageLog[];
+  actionEvents?: LineActionEvent[];
+  stepRuns?: LineStepRun[];
   lastMessage?: string;
 };
 
@@ -109,6 +177,7 @@ export function createLineApplicant(input: Partial<LineApplicant> & { lineUserId
   return {
     id: input.id ?? `line-${Date.now()}`,
     lineUserId: input.lineUserId,
+    friendId: input.friendId,
     displayName: input.displayName,
     name: input.name,
     school: input.school,
@@ -123,6 +192,12 @@ export function createLineApplicant(input: Partial<LineApplicant> & { lineUserId
     step: input.step ?? "submitted",
     createdAt: input.createdAt ?? now,
     updatedAt: now,
+    interviewAt: input.interviewAt,
+    feedback: input.feedback,
+    attachments: input.attachments ?? [],
+    messageLogs: input.messageLogs ?? [],
+    actionEvents: input.actionEvents ?? [],
+    stepRuns: input.stepRuns ?? [],
     lastMessage: input.lastMessage,
   };
 }
