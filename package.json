@@ -12,11 +12,13 @@
     "line:quota": "node scripts/line-cli.mjs quota",
     "line:profile": "node scripts/line-cli.mjs profile",
     "line:apply-url": "node scripts/line-cli.mjs apply-url",
-    "line:mcp": "line-bot-mcp-server"
+    "line:mcp": "line-bot-mcp-server",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
     "@line/bot-sdk": "^11.0.0",
+    "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
@@ -24,6 +26,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.7.0",
     "next": "16.2.2",
+    "pg": "^8.21.0",
     "prisma": "^7.6.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",

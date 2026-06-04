@@ -3,9 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 enum CompanyMemberRole {
@@ -92,6 +90,7 @@ model Company {
   resumes        Resume[]
   applications   Application[]
   matchingScores MatchingScore[]
+  lineIntegrationSettings LineIntegrationSettings?
 
   @@index([slug])
 }
@@ -172,6 +171,129 @@ model ScheduleBookingRecord {
   @@index([applicantId])
   @@index([lineUserId])
   @@index([status])
+}
+
+model LineIntegrationSettings {
+  id                        String   @id @default(uuid()) @db.Uuid
+  companyId                 String   @unique @db.Uuid
+  officialAccountName       String   @default("採用窓口")
+  officialAccountManagerUrl String   @default("https://manager.line.biz/")
+  addFriendUrl              String?
+  richMenuApplyUrl          String?
+  harnessDashboardUrl       String?
+  harnessFormUrl            String?
+  defaultApplyMessage       String   @db.Text
+  testFriendId              String?
+  stageTagMapJson           String?  @db.Text
+  messageTemplatesJson      String?  @db.Text
+  scheduledMessageRulesJson String?  @db.Text
+  automationRulesJson       String?  @db.Text
+  richMenuPlanJson          String?  @db.Text
+  broadcastDraftsJson       String?  @db.Text
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model ScheduledLineMessageRecord {
+  id           String    @id @default(uuid()) @db.Uuid
+  applicantId  String?
+  lineUserId   String
+  friendId     String?
+  title        String
+  ruleId       String?
+  stage        String?
+  templateId   String?
+  text         String?   @db.Text
+  scheduledFor DateTime
+  status       String
+  createdAt    DateTime  @default(now())
+  sentAt       DateTime?
+  error        String?   @db.Text
+
+  @@index([applicantId])
+  @@index([lineUserId])
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+model LineApplicantRecord {
+  id           String   @id @default(uuid()) @db.Uuid
+  lineUserId   String
+  friendId     String?
+  name         String?
+  school       String?
+  department   String?
+  phone        String?
+  email        String?
+  jobId        String?
+  jobTitle     String?
+  selfPr       String?  @db.Text
+  currentStage String
+  interviewAt  DateTime?
+  feedback     String?  @db.Text
+  lastMessage  String?  @db.Text
+  payloadJson  String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([lineUserId])
+  @@index([friendId])
+  @@index([currentStage])
+}
+
+model LineMessageLogRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  applicantId String?
+  lineUserId  String
+  friendId    String?
+  kind        String
+  templateId  String?
+  stage       String?
+  text        String   @db.Text
+  status      String
+  resultJson  String?  @db.Text
+  error       String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([applicantId])
+  @@index([lineUserId])
+  @@index([kind])
+}
+
+model LineActionEventRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  applicantId String?
+  lineUserId  String
+  friendId    String?
+  type        String
+  label       String
+  detailJson  String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([applicantId])
+  @@index([lineUserId])
+  @@index([type])
+}
+
+model LineDocumentRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  applicantId String?
+  lineUserId  String
+  messageId   String
+  fileName    String?
+  mimeType    String?
+  size        Int?
+  storageKey  String?
+  storageUrl  String?
+  createdAt   DateTime @default(now())
+
+  @@index([applicantId])
+  @@index([lineUserId])
+  @@index([messageId])
 }
 
 model CompanyVideo {
