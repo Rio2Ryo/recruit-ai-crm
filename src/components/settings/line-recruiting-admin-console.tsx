@@ -120,7 +120,6 @@ export function LineRecruitingAdminConsole() {
   const [schedules, setSchedules] = useState<ScheduledLineMessage[]>([]);
 
   const origin = getOrigin();
-  const submissionWebhook = `${origin}/api/integrations/line-harness/submission`;
   const simpleApplyUrl = `${origin}/line/apply`;
   const publicScheduleUrl = `${origin}/schedule`;
   const scheduledProcessUrl = `${origin}/api/line/scheduled/process`;
@@ -212,17 +211,17 @@ export function LineRecruitingAdminConsole() {
     }
     setState({ type: "loading", message: "テスト送信中..." });
     try {
-      const response = await fetch("/api/settings/line/harness", {
+      const response = await fetch("/api/settings/line/test", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(adminKey ? { "x-admin-key": adminKey } : {}),
         },
-        body: JSON.stringify({ action: "send-message", friendId: settings.testFriendId, text: testMessage }),
+        body: JSON.stringify({ action: "push-test", to: settings.testFriendId, text: testMessage }),
       });
       const json = await response.json();
       if (!response.ok || !json.ok) throw new Error(json.message ?? json.error ?? "送信に失敗しました。");
-      setState({ type: "success", message: "Harness経由でテスト送信しました。" });
+      setState({ type: "success", message: "公式LINEへテスト送信しました。" });
     } catch (error) {
       setState({ type: "error", message: error instanceof Error ? error.message : "送信に失敗しました。" });
     }
@@ -380,8 +379,8 @@ export function LineRecruitingAdminConsole() {
           <div className="grid gap-4 lg:grid-cols-2">
             <Field label="公式LINE名" value={settings.officialAccountName} onChange={(value) => update("officialAccountName", value)} placeholder="採用窓口" />
             <Field label="友だち追加URL" value={settings.addFriendUrl} onChange={(value) => update("addFriendUrl", value)} placeholder="https://lin.ee/..." />
-            <Field label="Harness管理画面URL" value={settings.harnessDashboardUrl} onChange={(value) => update("harnessDashboardUrl", value)} placeholder="https://..." />
-            <Field label="Harness応募フォームURL" value={settings.harnessFormUrl} onChange={(value) => update("harnessFormUrl", value)} placeholder="https://.../forms/recruit-apply" />
+            <ReadOnlyCopy label="LINE応募フォームURL" value={simpleApplyUrl} copied={copied} onCopy={copy} />
+            <ReadOnlyCopy label="日程予約フォームURL" value={publicScheduleUrl} copied={copied} onCopy={copy} />
             <div className="lg:col-span-2">
               <Label>応募誘導メッセージ</Label>
               <textarea
@@ -577,7 +576,7 @@ export function LineRecruitingAdminConsole() {
         {settings && active === "stages" ? (
           <JsonEditor
             label="選考ステージ ↔ LINEタグ"
-            helper="CRMのステージをHarnessタグ/metadataへ同期するための対応表です。"
+            helper="CRMの選考ステージ管理に使うタグ対応表です。"
             value={settings.stageTagMapJson}
             onChange={(value) => update("stageTagMapJson", value)}
           />
@@ -586,8 +585,7 @@ export function LineRecruitingAdminConsole() {
         {settings && active === "test" ? (
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl bg-white p-4 ring-1 ring-gray-200">
-              <h3 className="text-sm font-bold text-gray-950">Harnessに設定するURL</h3>
-              <CopyRow label="応募送信Webhook" value={submissionWebhook} copied={copied} onCopy={copy} />
+              <h3 className="text-sm font-bold text-gray-950">テスト用URL</h3>
               <CopyRow label="簡易応募フォーム" value={simpleApplyUrl} copied={copied} onCopy={copy} />
               <CopyRow label="公開日程予約フォーム" value={publicScheduleUrl} copied={copied} onCopy={copy} />
               <CopyRow label="予約送信Cron URL" value={scheduledProcessUrl} copied={copied} onCopy={copy} />
@@ -595,7 +593,7 @@ export function LineRecruitingAdminConsole() {
             <div className="rounded-xl bg-white p-4 ring-1 ring-gray-200">
               <h3 className="text-sm font-bold text-gray-950">テスト送信</h3>
               <div className="mt-3 space-y-3">
-                <Field label="送信先 friendId" value={settings.testFriendId} onChange={(value) => update("testFriendId", value)} placeholder="friend_xxxxxxxx" />
+                <Field label="送信先LINE userId" value={settings.testFriendId} onChange={(value) => update("testFriendId", value)} placeholder="Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
                 <div>
                   <Label>送信文</Label>
                   <textarea
@@ -606,7 +604,7 @@ export function LineRecruitingAdminConsole() {
                 </div>
                 <Button type="button" onClick={sendTest} disabled={!adminKey || state.type === "loading"}>
                   <Send className="size-4" />
-                  Harness経由でテスト送信
+                  公式LINEへテスト送信
                 </Button>
               </div>
             </div>
@@ -617,8 +615,8 @@ export function LineRecruitingAdminConsole() {
               </div>
               <ol className="mt-3 grid gap-2 text-sm leading-6 text-emerald-900 md:grid-cols-2">
                 <li>1. 友だち追加URLを確認</li>
-                <li>2. Harness応募フォームURLを確認</li>
-                <li>3. Harness側に応募送信Webhookを設定</li>
+                <li>2. LINE応募フォームURLを確認</li>
+                <li>3. 公式LINEのチャネルアクセストークン/シークレットを設定</li>
                 <li>4. /schedules で公開日程枠を作成</li>
                 <li>5. テスト応募→日程予約がCRMへ入ることを確認</li>
                 <li>6. /pipeline で選考ステージ管理</li>
@@ -650,6 +648,19 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
     <div>
       <Label>{label}</Label>
       <Input className="mt-2 bg-white" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+    </div>
+  );
+}
+
+function ReadOnlyCopy({ label, value, copied, onCopy }: { label: string; value: string; copied: string; onCopy: (value: string, label: string) => void }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white px-3 py-3">
+      <p className="text-xs font-bold text-gray-700">{label}</p>
+      <code className="mt-1 block break-all text-xs text-gray-600">{value}</code>
+      <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => onCopy(value, label)}>
+        <Clipboard className="size-4" />
+        {copied === label ? "コピー済み" : "コピー"}
+      </Button>
     </div>
   );
 }

@@ -25,30 +25,6 @@ const editableEnv = [
     placeholder: "https://recruit-ai-crm.vercel.app",
     secret: false,
   },
-  {
-    name: "LINE_HARNESS_API_URL",
-    label: "LINE Harness API URL",
-    placeholder: "https://...",
-    secret: false,
-  },
-  {
-    name: "LINE_HARNESS_API_KEY",
-    label: "LINE Harness API Key",
-    placeholder: "Harness側のAPIキー",
-    secret: true,
-  },
-  {
-    name: "LINE_HARNESS_WEBHOOK_SECRET",
-    label: "Harness Webhook Secret",
-    placeholder: "Harness→CRM webhook認証用の共有secret",
-    secret: true,
-  },
-  {
-    name: "LINE_HARNESS_APPLIED_TAG_ID",
-    label: "応募完了タグID（任意）",
-    placeholder: "応募完了タグを付ける場合のみ",
-    secret: false,
-  },
 ] as const;
 
 type Capability = {

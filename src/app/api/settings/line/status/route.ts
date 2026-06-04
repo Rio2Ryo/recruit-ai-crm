@@ -3,15 +3,10 @@ import { prisma } from "@/lib/prisma";
 
 const requiredEnv = [
   "NEXT_PUBLIC_APP_URL",
-  "LINE_HARNESS_API_URL",
-  "LINE_HARNESS_API_KEY",
-  "LINE_HARNESS_WEBHOOK_SECRET",
   "DATABASE_URL",
 ] as const;
 
 const optionalEnv = [
-  "LINE_HARNESS_APPLIED_TAG_ID",
-  "LINE_HARNESS_TIMEOUT_MS",
   "LINE_CHANNEL_ACCESS_TOKEN",
   "LINE_CHANNEL_SECRET",
   "CRON_SECRET",

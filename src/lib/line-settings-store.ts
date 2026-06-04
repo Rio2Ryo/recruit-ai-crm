@@ -88,7 +88,7 @@ export function getDefaultLineOperationalSettings(baseUrl: string): LineOperatio
     ),
     richMenuPlanJson: JSON.stringify(
       [
-        { label: "応募する", action: "uri", urlKey: "harnessFormUrl" },
+        { label: "応募する", action: "uri", urlKey: "richMenuApplyUrl" },
         { label: "募集要項", action: "uri", url: "/jobs" },
         { label: "会社を知る", action: "uri", url: "/company" },
         { label: "質問する", action: "message", text: "質問" },

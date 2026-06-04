@@ -1,5 +1,4 @@
 import "server-only";
-import { getLineHarnessClient } from "@/lib/line-harness";
 import { getLineOperationalSettingsAsync } from "@/lib/line-settings-store";
 import type { FunnelStage } from "@/lib/demo-data";
 import type { LineApplicant, LineMessageLog } from "@/lib/line-recruiting";
@@ -80,12 +79,9 @@ export async function sendLineMessageForApplicant(
   options: { templateId?: string; stage?: FunnelStage } = {}
 ) {
   const friendId = applicant.friendId ?? applicant.lineUserId;
-  const client = getLineHarnessClient();
 
   try {
-    const result = client
-      ? await client.sendMessage(friendId, text)
-      : await sendDirectLineMessage(applicant.lineUserId, text);
+    const result = await sendDirectLineMessage(applicant.lineUserId, text);
 
     return addLineMessageLog({
       applicantId: applicant.id,
@@ -107,7 +103,7 @@ export async function sendLineMessageForApplicant(
       templateId: options.templateId,
       stage: options.stage,
       text,
-      status: client || process.env.LINE_CHANNEL_ACCESS_TOKEN ? "failed" : "skipped",
+      status: process.env.LINE_CHANNEL_ACCESS_TOKEN ? "failed" : "skipped",
       error: error instanceof Error ? error.message : "send failed",
     });
   }

@@ -32,7 +32,7 @@ export default function LineSettingsPage() {
                   友だち追加から応募・選考連絡まで、必要なものだけを管理
                 </h1>
                 <p className="mt-3 text-sm leading-7 text-slate-300">
-                  LINE Harnessを前提に、採用担当が触るべき項目だけに絞りました。
+                  公式LINE直連携を前提に、採用担当が触るべき項目だけに絞りました。
                   公式LINEの入口、応募フォーム、返信テンプレート、選考タグ、テスト送信をこの画面で管理します。
                 </p>
               </div>

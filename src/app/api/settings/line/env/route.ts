@@ -4,10 +4,6 @@ const editableEnv = [
   "LINE_CHANNEL_ACCESS_TOKEN",
   "LINE_CHANNEL_SECRET",
   "NEXT_PUBLIC_APP_URL",
-  "LINE_HARNESS_API_URL",
-  "LINE_HARNESS_API_KEY",
-  "LINE_HARNESS_WEBHOOK_SECRET",
-  "LINE_HARNESS_APPLIED_TAG_ID",
 ] as const;
 
 function getVercelContext() {
