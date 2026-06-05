@@ -82,9 +82,9 @@ export function Sidebar() {
       {/* Company pill */}
       <div className="mx-4 mb-3">
         <div className="rounded-lg bg-white/[0.08] px-3 py-2.5 backdrop-blur">
-          <p className="text-xs font-semibold text-white">竹島鉄工建設株式会社</p>
+          <p className="text-xs font-semibold text-white">企業情報未登録</p>
           <p className="mt-0.5 text-[10px] leading-relaxed text-indigo-300">
-            高卒採用の一元管理
+            実データのみ表示
           </p>
         </div>
       </div>
@@ -135,7 +135,7 @@ export function Sidebar() {
         </p>
         <div className="mt-1.5 flex items-center gap-2">
           <div className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] text-indigo-300">稼働中 - 5名分析済</span>
+          <span className="text-[10px] text-indigo-300">実データ待機中</span>
         </div>
       </div>
     </aside>

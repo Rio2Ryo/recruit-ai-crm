@@ -117,7 +117,7 @@ export function buildLineApplyUrl(baseUrl: string, lineUserId?: string) {
 
 export function buildWelcomeMessage(baseUrl: string, lineUserId?: string) {
   return [
-    "竹島鉄工建設株式会社 採用窓口です。",
+    "採用窓口です。",
     "LINEだけで求人確認・応募・日程連絡まで完結できます。",
     "応募フォームはこちら：",
     buildLineApplyUrl(baseUrl, lineUserId),
