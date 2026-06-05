@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+const SESSION_COOKIE = "recruit-ai-session-email";
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -14,18 +16,23 @@ export async function middleware(request: NextRequest) {
     "/students",
     "/schools",
     "/members",
+    "/resumes",
+    "/schedules",
+    "/pipeline",
+    "/settings/line",
   ];
 
-  const isProtectedPath = protectedPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isProtectedPath = protectedPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  const sessionEmail = request.cookies.get(SESSION_COOKIE)?.value;
 
-  // UI demo phase: bypass auth enforcement entirely to avoid env-related middleware failures on Vercel.
-  // Auth will be restored when Supabase envs are configured.
-  if (pathname === "/login") {
+  if (pathname === "/login" && sessionEmail) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (isProtectedPath) {
-    return NextResponse.next();
+  if (isProtectedPath && !sessionEmail) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();

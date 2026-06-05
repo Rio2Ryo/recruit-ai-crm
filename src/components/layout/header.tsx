@@ -3,6 +3,7 @@ import { Bell, Search, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { RoleSwitcher } from "@/components/rbac/role-switcher";
+import { AuthStatus } from "@/components/auth/auth-status";
 
 export function Header({ title }: { title: string }) {
   return (
@@ -36,9 +37,7 @@ export function Header({ title }: { title: string }) {
           >
             <Settings className="size-4" />
           </Link>
-          <div className="ml-1 flex size-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
-            山
-          </div>
+          <AuthStatus />
         </div>
       </div>
     </header>
