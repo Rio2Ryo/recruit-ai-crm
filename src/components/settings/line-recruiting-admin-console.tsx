@@ -19,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { fetchWithRole } from "@/lib/rbac-client";
+import { activeRoleHasPermission, fetchWithRole } from "@/lib/rbac-client";
 
 type LineSettings = {
   officialAccountName: string;
@@ -130,6 +130,11 @@ export function LineRecruitingAdminConsole() {
     : recipientMode === "job"
       ? applicants.filter((applicant) => (applicant.jobTitle ?? "希望職種未定") === selectedJobTitle).length
       : selectedApplicantId ? 1 : 0;
+  const canEditTemplates = activeRoleHasPermission("template:create") || activeRoleHasPermission("admin");
+  const canSendOneToOne = activeRoleHasPermission("message:send:1to1");
+  const canSendBroadcast = activeRoleHasPermission("message:send:broadcast");
+  const canSendCurrentMode = recipientMode === "individual" ? canSendOneToOne : canSendBroadcast;
+  const canReserveCurrentMode = canSendCurrentMode;
 
   useEffect(() => {
     fetch("/api/settings/line/config", { cache: "no-store" })
@@ -302,7 +307,7 @@ export function LineRecruitingAdminConsole() {
   async function cancelSchedule(scheduleId: string) {
     setState({ type: "loading", message: "予約を取り消し中..." });
     try {
-      const response = await fetch(`/api/line/scheduled?id=${encodeURIComponent(scheduleId)}`, { method: "DELETE" });
+      const response = await fetchWithRole(`/api/line/scheduled?id=${encodeURIComponent(scheduleId)}`, { method: "DELETE" });
       const json = await response.json();
       if (!response.ok || !json.ok) throw new Error(json.message ?? json.error ?? "取り消しに失敗しました。");
       setState({ type: "success", message: "予約を取り消しました。" });
@@ -341,7 +346,7 @@ export function LineRecruitingAdminConsole() {
             placeholder="LINE_SETTINGS_ADMIN_KEY"
             autoComplete="off"
           />
-          <Button type="button" onClick={save} disabled={!settings || state.type === "loading"}>
+          <Button type="button" onClick={save} disabled={!settings || state.type === "loading" || !canEditTemplates}>
             {state.type === "loading" ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
             保存
           </Button>
@@ -394,12 +399,16 @@ export function LineRecruitingAdminConsole() {
         ) : null}
 
         {settings && active === "messages" ? (
-          <JsonEditor
-            label="返信テンプレート"
-            helper="応募受付、書類依頼、面接リマインド、内定者フォローなど。"
-            value={settings.messageTemplatesJson}
-            onChange={(value) => update("messageTemplatesJson", value)}
-          />
+          canEditTemplates ? (
+            <JsonEditor
+              label="返信テンプレート"
+              helper="応募受付、書類依頼、面接リマインド、内定者フォローなど。"
+              value={settings.messageTemplatesJson}
+              onChange={(value) => update("messageTemplatesJson", value)}
+            />
+          ) : (
+            <PermissionNotice message="このロールでは返信テンプレートを編集できません。" />
+          )
         ) : null}
 
         {settings && active === "reservation" ? (
@@ -506,11 +515,11 @@ export function LineRecruitingAdminConsole() {
                     「今すぐ送信」は即時配信、「投稿予約」は指定日時にCron処理でLINEへ送信されます。
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" onClick={sendManualMessage} disabled={state.type === "loading" || targetCount === 0}>
+                    <Button type="button" variant="outline" onClick={sendManualMessage} disabled={state.type === "loading" || targetCount === 0 || !canSendCurrentMode}>
                       {state.type === "loading" ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                       {targetCount > 1 ? `${targetCount}人へ今すぐ送信` : "今すぐ送信"}
                     </Button>
-                    <Button type="button" onClick={reserveMessage} disabled={state.type === "loading" || targetCount === 0}>
+                    <Button type="button" onClick={reserveMessage} disabled={state.type === "loading" || targetCount === 0 || !canReserveCurrentMode}>
                       {state.type === "loading" ? <Loader2 className="size-4 animate-spin" /> : <CalendarDays className="size-4" />}
                       {targetCount > 1 ? `${targetCount}人へ投稿予約する` : "投稿予約する"}
                     </Button>
@@ -553,7 +562,7 @@ export function LineRecruitingAdminConsole() {
                           size="sm"
                           className="mt-3 text-red-600 hover:bg-red-50"
                           onClick={() => cancelSchedule(schedule.id)}
-                          disabled={state.type === "loading"}
+                          disabled={state.type === "loading" || !canReserveCurrentMode}
                         >
                           <Trash2 className="size-3.5" />
                           取り消し
@@ -575,12 +584,16 @@ export function LineRecruitingAdminConsole() {
         ) : null}
 
         {settings && active === "stages" ? (
-          <JsonEditor
-            label="選考ステージ ↔ LINEタグ"
-            helper="CRMの選考ステージ管理に使うタグ対応表です。"
-            value={settings.stageTagMapJson}
-            onChange={(value) => update("stageTagMapJson", value)}
-          />
+          canEditTemplates ? (
+            <JsonEditor
+              label="選考ステージ ↔ LINEタグ"
+              helper="CRMの選考ステージ管理に使うタグ対応表です。"
+              value={settings.stageTagMapJson}
+              onChange={(value) => update("stageTagMapJson", value)}
+            />
+          ) : (
+            <PermissionNotice message="このロールでは選考タグ設定を編集できません。" />
+          )
         ) : null}
 
         {settings && active === "test" ? (
@@ -603,7 +616,7 @@ export function LineRecruitingAdminConsole() {
                     onChange={(event) => setTestMessage(event.target.value)}
                   />
                 </div>
-                <Button type="button" onClick={sendTest} disabled={!adminKey || state.type === "loading"}>
+                <Button type="button" onClick={sendTest} disabled={!adminKey || state.type === "loading" || !canSendOneToOne}>
                   <Send className="size-4" />
                   公式LINEへテスト送信
                 </Button>
@@ -641,6 +654,14 @@ export function LineRecruitingAdminConsole() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+function PermissionNotice({ message }: { message: string }) {
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800">
+      {message}
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecruitingRoleId } from "@/lib/rbac";
+import { getRoleDefinition, hasPermission, type RecruitingPermission, type RecruitingRoleId } from "@/lib/rbac";
 
 const STORAGE_KEY = "recruit-ai-active-role";
 
@@ -12,6 +12,18 @@ export function getActiveRoleId(): RecruitingRoleId {
 export function setActiveRoleId(roleId: RecruitingRoleId) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(STORAGE_KEY, roleId);
+}
+
+export function getActiveRoleDefinition() {
+  return getRoleDefinition(getActiveRoleId());
+}
+
+export function activeRoleHasPermission(permission: RecruitingPermission) {
+  return hasPermission(getActiveRoleId(), permission);
+}
+
+export function roleHas(permission: RecruitingPermission, roleId = getActiveRoleId()) {
+  return hasPermission(roleId, permission);
 }
 
 export function fetchWithRole(input: RequestInfo | URL, init: RequestInit = {}) {

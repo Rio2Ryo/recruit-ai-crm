@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getActiveRoleId, roleHas } from "@/lib/rbac-client";
 import type { RecruitingRoleId } from "@/lib/rbac";
 
 type ScheduleEvent = {
@@ -37,13 +38,6 @@ type ScheduleEvent = {
   }[];
 };
 
-const roleOptions: { id: RecruitingRoleId; label: string }[] = [
-  { id: "executive", label: "代表/管理者" },
-  { id: "recruiting_lead", label: "採用責任者" },
-  { id: "assistant_scheduler", label: "日程調整担当" },
-  { id: "interviewer", label: "面接官" },
-];
-
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
@@ -66,11 +60,14 @@ async function fetchScheduleEvents(role: RecruitingRoleId) {
 }
 
 export function ScheduleAdminConsole() {
-  const [role, setRole] = useState<RecruitingRoleId>("executive");
+  const [role] = useState<RecruitingRoleId>(() => getActiveRoleId());
   const [events, setEvents] = useState<ScheduleEvent[]>([]);
   const [selectedEventId, setSelectedEventId] = useState("");
   const [selectedSlotId, setSelectedSlotId] = useState("");
   const [message, setMessage] = useState("");
+
+  const canManageSchedule = roleHas("schedule:manage", role);
+  const canBookSchedule = roleHas("schedule:book", role) || canManageSchedule;
 
   const slots = useMemo(
     () => events.flatMap((event) => event.slots.map((slot) => ({ ...slot, eventTitle: event.title }))),
@@ -258,7 +255,7 @@ export function ScheduleAdminConsole() {
             面接/説明会イベント、開催枠、応募者ごとの予約を管理します。公開予約フォームと連動し、テスト用公開枠もすぐ作成できます。
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={createTestPublicSchedule}>
+            <Button type="button" variant="outline" onClick={createTestPublicSchedule} disabled={!canManageSchedule}>
               テスト用公開枠を作成
             </Button>
             <a
@@ -272,23 +269,17 @@ export function ScheduleAdminConsole() {
           </div>
         </div>
         <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-4">
-          <Label htmlFor="role-preview" className="text-indigo-900">
-            権限プレビュー
-          </Label>
-          <select
-            id="role-preview"
-            value={role}
-            onChange={(event) => setRole(event.target.value as RecruitingRoleId)}
-            className="mt-2 h-9 w-full rounded-lg border border-indigo-200 bg-white px-2 text-sm"
-          >
-            {roleOptions.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2 text-sm font-bold text-indigo-900">
+            <ShieldCheck className="size-4" />
+            現在の権限
+          </div>
+          <p className="mt-2 text-sm font-semibold text-indigo-950">{role}</p>
           <p className="mt-2 text-xs leading-5 text-indigo-800">
-            面接官は閲覧のみ、日程調整担当以上はイベント/予約を登録できます。
+            {canManageSchedule
+              ? "イベント/枠作成と予約管理ができます。"
+              : canBookSchedule
+                ? "予約管理ができます。イベント/枠作成はできません。"
+                : "閲覧のみです。イベント/枠/予約の操作はできません。"}
           </p>
         </div>
       </Card>
@@ -300,6 +291,7 @@ export function ScheduleAdminConsole() {
             イベント作成
           </div>
           <form className="mt-4 space-y-3" onSubmit={createEvent}>
+            <fieldset disabled={!canManageSchedule} className="space-y-3 disabled:opacity-50">
             <div>
               <Label htmlFor="event-title">タイトル</Label>
               <Input id="event-title" name="title" placeholder="一次面接 / 会社説明会" required />
@@ -329,9 +321,10 @@ export function ScheduleAdminConsole() {
               <input name="isPublic" type="checkbox" className="size-4 rounded border-gray-300" />
               公開予約フォーム候補
             </label>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={!canManageSchedule}>
               作成
             </Button>
+            </fieldset>
           </form>
         </Card>
 
@@ -341,6 +334,7 @@ export function ScheduleAdminConsole() {
             枠作成
           </div>
           <form className="mt-4 space-y-3" onSubmit={createSlot}>
+            <fieldset disabled={!canManageSchedule} className="space-y-3 disabled:opacity-50">
             <div>
               <Label htmlFor="slot-event">対象イベント</Label>
               <select
@@ -370,9 +364,10 @@ export function ScheduleAdminConsole() {
               <Label htmlFor="slot-capacity">定員</Label>
               <Input id="slot-capacity" name="capacity" type="number" min="1" defaultValue="1" required />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={!canManageSchedule}>
               枠を追加
             </Button>
+            </fieldset>
           </form>
         </Card>
 
@@ -382,6 +377,7 @@ export function ScheduleAdminConsole() {
             応募者予約
           </div>
           <form className="mt-4 space-y-3" onSubmit={createBooking}>
+            <fieldset disabled={!canBookSchedule} className="space-y-3 disabled:opacity-50">
             <div>
               <Label htmlFor="booking-slot">予約枠</Label>
               <select
@@ -417,9 +413,10 @@ export function ScheduleAdminConsole() {
                 placeholder="連絡済み、希望時間など"
               />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={!canBookSchedule}>
               予約登録
             </Button>
+            </fieldset>
           </form>
         </Card>
       </div>
@@ -462,7 +459,7 @@ export function ScheduleAdminConsole() {
                     <ShieldCheck className="size-4 text-slate-500" />
                     {event.slots.length}枠
                   </div>
-                  <Button type="button" variant="outline" size="sm" onClick={() => deleteEvent(event.id)}>
+                  <Button type="button" variant="outline" size="sm" onClick={() => deleteEvent(event.id)} disabled={!canManageSchedule}>
                     削除
                   </Button>
                 </div>
@@ -479,11 +476,11 @@ export function ScheduleAdminConsole() {
                           {slot.bookedCount}/{slot.capacity}・{slot.status}
                         </span>
                         {slot.status === "cancelled" || slot.status === "closed" ? (
-                          <Button type="button" variant="outline" size="sm" onClick={() => updateSlotStatus(slot.id, "open")}>
+                          <Button type="button" variant="outline" size="sm" onClick={() => updateSlotStatus(slot.id, "open")} disabled={!canManageSchedule}>
                             再開
                           </Button>
                         ) : (
-                          <Button type="button" variant="outline" size="sm" onClick={() => updateSlotStatus(slot.id, "cancelled")}>
+                          <Button type="button" variant="outline" size="sm" onClick={() => updateSlotStatus(slot.id, "cancelled")} disabled={!canManageSchedule}>
                             キャンセル
                           </Button>
                         )}
@@ -502,7 +499,7 @@ export function ScheduleAdminConsole() {
                             <div className="mt-1 flex items-center justify-between gap-2">
                               <span className="text-xs text-gray-500">status: {booking.status ?? "booked"}</span>
                               {(booking.status ?? "booked") !== "cancelled" && (
-                                <Button type="button" variant="outline" size="sm" onClick={() => cancelBooking(booking.id)}>
+                                <Button type="button" variant="outline" size="sm" onClick={() => cancelBooking(booking.id)} disabled={!canBookSchedule}>
                                   予約キャンセル
                                 </Button>
                               )}
