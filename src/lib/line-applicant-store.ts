@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { createLineApplicant, type LineActionEvent, type LineApplicant, type LineAttachment, type LineMessageLog, type LineStepRun } from "@/lib/line-recruiting";
-import type { FunnelStage } from "@/lib/demo-data";
+import type { FunnelStage } from "@/lib/recruiting-stages";
 
 export type LineNotification = {
   id: string;

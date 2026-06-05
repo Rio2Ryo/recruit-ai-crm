@@ -1,313 +1,159 @@
-import { Header } from "@/components/layout/header";
-import {
-  demoActivities,
-  demoFunnelData,
-  demoJobs,
-  demoStudents,
-} from "@/lib/demo-data";
-import {
-  ArrowUpRight,
-  BarChart3,
-  Briefcase,
-  GraduationCap,
-  TrendingUp,
-  Users,
-  CalendarCheck,
-  Award,
-} from "lucide-react";
+"use client";
 
-const statCards = [
-  {
-    label: "LINE流入数",
-    value: 152,
-    change: "+18%",
-    changeLabel: "前週比",
-    trend: "up" as const,
-    icon: GraduationCap,
-    iconBg: "bg-indigo-50",
-    iconColor: "text-indigo-600",
-  },
-  {
-    label: "応募数",
-    value: 96,
-    change: "+8件",
-    changeLabel: "今月",
-    trend: "up" as const,
-    icon: Users,
-    iconBg: "bg-violet-50",
-    iconColor: "text-violet-600",
-  },
-  {
-    label: "面接中",
-    value: 53,
-    change: "34+19件",
-    changeLabel: "一次+最終",
-    trend: "up" as const,
-    icon: CalendarCheck,
-    iconBg: "bg-amber-50",
-    iconColor: "text-amber-600",
-  },
-  {
-    label: "内定数",
-    value: 10,
-    change: "6.6%",
-    changeLabel: "歩留まり率",
-    trend: "up" as const,
-    icon: Award,
-    iconBg: "bg-emerald-50",
-    iconColor: "text-emerald-600",
-  },
-];
+import { useEffect, useMemo, useState } from "react";
+import { Header } from "@/components/layout/header";
+import { funnelStages, type FunnelStage } from "@/lib/recruiting-stages";
+import { ArrowUpRight, BarChart3, Briefcase, GraduationCap, TrendingUp, Users, CalendarCheck, Award } from "lucide-react";
+
+type StudentRow = {
+  id: string;
+  name: string;
+  school: string;
+  department: string;
+  status: FunnelStage;
+  score?: number;
+  source?: string;
+  jobTitle?: string;
+  updatedAt?: string;
+};
+
+const stageColors: Record<FunnelStage, string> = {
+  LINE流入: "#6366f1",
+  応募: "#8b5cf6",
+  書類選考: "#a855f7",
+  一次面接: "#d946ef",
+  最終面接: "#ec4899",
+  内定: "#f43f5e",
+  入社: "#10b981",
+};
 
 export default function DashboardPage() {
+  const [students, setStudents] = useState<StudentRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/line/applicants", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const json = await response.json();
+        setStudents(json.students ?? []);
+      })
+      .catch(() => setStudents([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const counts = useMemo(() => {
+    const byStage = Object.fromEntries(funnelStages.map((stage) => [stage, 0])) as Record<FunnelStage, number>;
+    students.forEach((student) => {
+      if (student.status in byStage) byStage[student.status] += 1;
+    });
+    return byStage;
+  }, [students]);
+
+  const total = students.length;
+  const interviews = counts["一次面接"] + counts["最終面接"];
+  const offers = counts["内定"];
+  const statCards = [
+    { label: "LINE流入数", value: total, change: "実データ", changeLabel: loading ? "読込中" : "現在", icon: GraduationCap, iconBg: "bg-indigo-50", iconColor: "text-indigo-600" },
+    { label: "応募数", value: counts["応募"], change: "実データ", changeLabel: "応募ステージ", icon: Users, iconBg: "bg-violet-50", iconColor: "text-violet-600" },
+    { label: "面接中", value: interviews, change: "実データ", changeLabel: "一次+最終", icon: CalendarCheck, iconBg: "bg-amber-50", iconColor: "text-amber-600" },
+    { label: "内定数", value: offers, change: total ? `${((offers / total) * 100).toFixed(1)}%` : "0.0%", changeLabel: "歩留まり率", icon: Award, iconBg: "bg-emerald-50", iconColor: "text-emerald-600" },
+  ];
+
+  const recentStudents = students.slice(0, 5);
+  const maxCount = Math.max(total, 1);
+
   return (
     <>
       <Header title="ダッシュボード" />
       <div className="p-6 space-y-6">
-        {/* Stats row */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {statCards.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div
-                key={stat.label}
-                className="group relative overflow-hidden rounded-xl bg-white p-5 ring-1 ring-gray-200/60 shadow-sm hover:shadow-md transition-shadow"
-              >
+              <div key={stat.label} className="group relative overflow-hidden rounded-xl bg-white p-5 ring-1 ring-gray-200/60 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-xs font-medium text-gray-500">
-                      {stat.label}
-                    </p>
-                    <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
-                      {stat.value}
-                    </p>
+                    <p className="text-xs font-medium text-gray-500">{stat.label}</p>
+                    <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">{stat.value}</p>
                   </div>
-                  <div
-                    className={`flex size-10 items-center justify-center rounded-xl ${stat.iconBg}`}
-                  >
+                  <div className={`flex size-10 items-center justify-center rounded-xl ${stat.iconBg}`}>
                     <Icon className={`size-5 ${stat.iconColor}`} />
                   </div>
                 </div>
                 <div className="mt-3 flex items-center gap-1.5">
-                  {stat.trend === "up" && (
-                    <TrendingUp className="size-3.5 text-emerald-500" />
-                  )}
-                  <span className="text-xs font-medium text-emerald-600">
-                    {stat.change}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {stat.changeLabel}
-                  </span>
+                  <TrendingUp className="size-3.5 text-emerald-500" />
+                  <span className="text-xs font-medium text-emerald-600">{stat.change}</span>
+                  <span className="text-xs text-gray-400">{stat.changeLabel}</span>
                 </div>
               </div>
             );
           })}
         </section>
 
-        {/* Chart placeholder + Activity */}
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-          {/* Funnel chart */}
           <div className="xl:col-span-2 rounded-xl bg-white p-6 ring-1 ring-gray-200/60 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">
-                  採用ファネル（歩留まり）
-                </h2>
-                <p className="mt-0.5 text-xs text-gray-500">
-                  LINE流入から入社までの歩留まり推移
-                </p>
+                <h2 className="text-sm font-semibold text-gray-900">採用ファネル（実データ）</h2>
+                <p className="mt-0.5 text-xs text-gray-500">LINE応募で保存された候補者のみを表示</p>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                <BarChart3 className="size-3.5" />
-                累計
-              </div>
+              <div className="flex items-center gap-1.5 text-xs text-gray-400"><BarChart3 className="size-3.5" />実DB</div>
             </div>
             <div className="space-y-2.5">
-              {demoFunnelData.map((item) => {
-                const widthPercent = (item.count / 152) * 100;
-                const yieldPercent = ((item.count / 152) * 100).toFixed(1);
+              {funnelStages.map((stage) => {
+                const count = counts[stage];
+                const widthPercent = (count / maxCount) * 100;
+                const yieldPercent = total ? ((count / total) * 100).toFixed(1) : "0.0";
                 return (
-                  <div key={item.stage} className="flex items-center gap-3">
-                    <span className="w-[4.5rem] shrink-0 text-right text-xs font-medium text-gray-600">
-                      {item.stage}
-                    </span>
-                    <div className="relative flex-1 h-7">
-                      <div
-                        className="absolute inset-y-0 left-0 rounded-md"
-                        style={{
-                          width: `${widthPercent}%`,
-                          backgroundColor: item.color,
-                          minWidth: "2rem",
-                        }}
-                      />
-                      <div className="absolute inset-y-0 left-0 right-0 flex items-center">
-                        <span
-                          className="ml-2 text-[11px] font-semibold text-white drop-shadow-sm"
-                          style={{ marginLeft: Math.min(widthPercent, 90) > 15 ? "0.5rem" : undefined }}
-                        >
-                          {item.count}
-                        </span>
-                      </div>
+                  <div key={stage} className="flex items-center gap-3">
+                    <span className="w-[4.5rem] shrink-0 text-right text-xs font-medium text-gray-600">{stage}</span>
+                    <div className="relative flex-1 h-7 rounded-md bg-gray-100">
+                      <div className="absolute inset-y-0 left-0 rounded-md" style={{ width: `${widthPercent}%`, backgroundColor: stageColors[stage], minWidth: count ? "2rem" : "0" }} />
+                      <div className="absolute inset-y-0 left-0 right-0 flex items-center"><span className="ml-2 text-[11px] font-semibold text-gray-700">{count}</span></div>
                     </div>
-                    <span className="w-12 shrink-0 text-right text-xs font-medium text-gray-500">
-                      {yieldPercent}%
-                    </span>
+                    <span className="w-12 shrink-0 text-right text-xs font-medium text-gray-500">{yieldPercent}%</span>
                   </div>
                 );
               })}
             </div>
+            {!loading && total === 0 && <p className="mt-5 rounded-lg bg-gray-50 p-4 text-sm text-gray-500">まだ応募者データがありません。ダミーデータは表示していません。</p>}
           </div>
 
-          {/* Activity feed */}
           <div className="rounded-xl bg-white p-6 ring-1 ring-gray-200/60 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-900">
-              最近のアクティビティ
-            </h2>
+            <h2 className="text-sm font-semibold text-gray-900">最近のアクティビティ</h2>
             <div className="mt-5 space-y-5">
-              {demoActivities.map((activity, idx) => (
-                <div key={activity.title} className="flex gap-3">
-                  <div className="relative flex flex-col items-center">
-                    <div className="flex size-2 rounded-full bg-indigo-500 ring-4 ring-indigo-50" />
-                    {idx < demoActivities.length - 1 && (
-                      <div className="flex-1 w-px bg-gray-200 mt-1" />
-                    )}
-                  </div>
-                  <div className="pb-5">
-                    <p className="text-sm font-medium text-gray-900 leading-snug">
-                      {activity.title}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-                      {activity.description}
-                    </p>
-                    <p className="mt-1.5 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
-                      {activity.time}
-                    </p>
-                  </div>
+              {recentStudents.length === 0 ? (
+                <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">実データの活動履歴はまだありません。</p>
+              ) : recentStudents.map((student, idx) => (
+                <div key={student.id} className="flex gap-3">
+                  <div className="relative flex flex-col items-center"><div className="flex size-2 rounded-full bg-indigo-500 ring-4 ring-indigo-50" />{idx < recentStudents.length - 1 && <div className="flex-1 w-px bg-gray-200 mt-1" />}</div>
+                  <div className="pb-5"><p className="text-sm font-medium text-gray-900 leading-snug">{student.name} が更新されました</p><p className="mt-1 text-xs text-gray-500 leading-relaxed">{student.status} / {student.jobTitle ?? "希望職種未入力"}</p><p className="mt-1.5 text-[10px] font-medium text-gray-400 uppercase tracking-wide">{student.updatedAt?.slice(0, 10) ?? "日付未取得"}</p></div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Candidates + Jobs */}
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-          {/* Featured candidates */}
           <div className="xl:col-span-2 rounded-xl bg-white p-6 ring-1 ring-gray-200/60 shadow-sm">
             <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900">
-                  注目候補者
-                </h2>
-                <p className="mt-0.5 text-xs text-gray-500">
-                  AIマッチ度の高い候補者を優先表示
-                </p>
-              </div>
-              <button className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition">
-                すべて見る
-                <ArrowUpRight className="size-3.5" />
-              </button>
+              <div><h2 className="text-sm font-semibold text-gray-900">候補者</h2><p className="mt-0.5 text-xs text-gray-500">LINE応募から保存された実データ</p></div>
+              <button className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition">すべて見る<ArrowUpRight className="size-3.5" /></button>
             </div>
             <div className="space-y-3">
-              {demoStudents.map((student) => {
-                const scoreColor =
-                  student.score >= 90
-                    ? "text-emerald-700 bg-emerald-50 ring-emerald-200/60"
-                    : student.score >= 80
-                      ? "text-indigo-700 bg-indigo-50 ring-indigo-200/60"
-                      : "text-amber-700 bg-amber-50 ring-amber-200/60";
-                return (
-                  <div
-                    key={student.id}
-                    className="group flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/40 p-4 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-9 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">
-                        {student.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {student.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {student.school} / {student.department}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="hidden sm:inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-medium text-gray-600">
-                        {student.status}
-                      </span>
-                      <span
-                        className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold ring-1 ${scoreColor}`}
-                      >
-                        {student.score}%
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+              {recentStudents.length === 0 ? <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">候補者データはまだありません。</p> : recentStudents.map((student) => (
+                <div key={student.id} className="group flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/40 p-4 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all">
+                  <div className="flex items-center gap-3"><div className="flex size-9 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">{student.name.charAt(0)}</div><div><p className="text-sm font-medium text-gray-900">{student.name}</p><p className="text-xs text-gray-500">{student.school} / {student.department}</p></div></div>
+                  <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-medium text-gray-600">{student.status}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Jobs overview */}
-          <div className="space-y-4">
-            {demoJobs.map((job) => {
-              const scoreColor =
-                job.score >= 90
-                  ? "text-emerald-600"
-                  : job.score >= 80
-                    ? "text-indigo-600"
-                    : "text-amber-600";
-              return (
-                <div
-                  key={job.id}
-                  className="rounded-xl bg-white p-5 ring-1 ring-gray-200/60 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex size-9 items-center justify-center rounded-lg bg-indigo-50">
-                        <Briefcase className="size-4 text-indigo-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {job.title}
-                        </p>
-                        <p className="mt-0.5 text-xs text-gray-500">
-                          {job.location}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-                    <div className="text-xs text-gray-500">
-                      応募{" "}
-                      <span className="font-semibold text-gray-900">
-                        {job.applicants}
-                      </span>
-                      件
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      平均マッチ度{" "}
-                      <span className={`font-bold ${scoreColor}`}>
-                        {job.score}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* CTA card */}
-            <div className="rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 p-5 text-white shadow-lg shadow-indigo-500/20">
-              <h3 className="text-sm font-semibold">公開企業ページ</h3>
-              <p className="mt-1.5 text-xs text-indigo-200 leading-relaxed">
-                学生向けの魅力発信ページから応募までつながる導線を確認
-              </p>
-              <button className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium text-white backdrop-blur hover:bg-white/25 transition">
-                プレビューを見る
-                <ArrowUpRight className="size-3.5" />
-              </button>
-            </div>
+          <div className="rounded-xl bg-white p-6 ring-1 ring-gray-200/60 shadow-sm">
+            <h2 className="text-sm font-semibold text-gray-900">求人</h2>
+            <div className="mt-5 flex items-center gap-3 rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500"><Briefcase className="size-4" />登録済み求人はまだありません。</div>
           </div>
         </section>
       </div>

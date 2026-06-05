@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/header";
-import {
-  demoFunnelCandidates,
-  funnelStages,
-  type FunnelStage,
-  type FunnelCandidate,
-} from "@/lib/demo-data";
+import { funnelStages, type FunnelStage, type FunnelCandidate } from "@/lib/recruiting-stages";
 import {
   ArrowDown,
   ArrowRight,
@@ -129,7 +124,7 @@ function CandidateCard({
 /* Main Page                                                           */
 /* ------------------------------------------------------------------ */
 export default function PipelinePage() {
-  const [candidates, setCandidates] = useState(demoFunnelCandidates);
+  const [candidates, setCandidates] = useState<FunnelCandidate[]>([]);
   const [mobileStage, setMobileStage] = useState<FunnelStage>("LINE流入");
 
   useEffect(() => {
@@ -138,9 +133,9 @@ export default function PipelinePage() {
         if (!response.ok) return;
         const json = await response.json();
         const lineCandidates = (json.funnelCandidates ?? []) as FunnelCandidate[];
-        setCandidates([...lineCandidates, ...demoFunnelCandidates]);
+        setCandidates(lineCandidates);
       })
-      .catch(() => setCandidates(demoFunnelCandidates));
+      .catch(() => setCandidates([]));
   }, []);
 
   function handleMove(id: string, direction: "forward" | "backward") {

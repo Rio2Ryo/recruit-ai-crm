@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import type { FunnelStage } from "@/lib/demo-data";
+import type { FunnelStage } from "@/lib/recruiting-stages";
 import { getLineApplicant, recordLineAction } from "@/lib/line-applicant-store";
 import { getLineOperationalSettingsAsync } from "@/lib/line-settings-store";
 import type { LineApplicant } from "@/lib/line-recruiting";

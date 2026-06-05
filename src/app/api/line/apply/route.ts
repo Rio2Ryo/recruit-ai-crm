@@ -10,7 +10,7 @@ function getBaseUrl(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const input = await request.json();
   const applicant = await saveLineApplicant({
-    lineUserId: input.lineUserId || "demo-line-user",
+    lineUserId: input.lineUserId || `line-anonymous-${Date.now()}`,
     friendId: input.friendId,
     name: input.name,
     school: input.school,
@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     phone: input.phone,
     email: input.email,
     jobId: input.jobId,
+    jobTitle: input.jobId,
     selfPr: input.selfPr,
     currentStage: "応募",
   });

@@ -1,4 +1,4 @@
-import { demoJobs, funnelStages, type FunnelStage } from "@/lib/demo-data";
+import { funnelStages, type FunnelStage } from "@/lib/recruiting-stages";
 
 export type LineRecruitingStep = "welcome" | "job_select" | "profile" | "submitted";
 
@@ -125,12 +125,10 @@ export function buildWelcomeMessage(baseUrl: string, lineUserId?: string) {
 }
 
 export function buildJobsMessage(baseUrl: string, lineUserId?: string) {
-  const lines = demoJobs.map((job, index) => `${index + 1}. ${job.title}（${job.location}）`);
   return [
-    "募集中の求人です。気になる職種を選んで応募できます。",
-    ...lines,
-    "",
-    `応募フォーム: ${buildLineApplyUrl(baseUrl, lineUserId)}`,
+    "現在、管理画面に登録済みの求人情報がありません。",
+    "応募・問い合わせは以下のフォームから送信できます。担当者が内容を確認してご連絡します。",
+    buildLineApplyUrl(baseUrl, lineUserId),
   ].join("\n");
 }
 
@@ -172,8 +170,6 @@ export function buildAutoReply(text: string, baseUrl: string, lineUserId?: strin
 
 export function createLineApplicant(input: Partial<LineApplicant> & { lineUserId: string }): LineApplicant {
   const now = new Date().toISOString();
-  const job = demoJobs.find((item) => item.id === input.jobId);
-
   return {
     id: input.id ?? `line-${Date.now()}`,
     lineUserId: input.lineUserId,
@@ -185,7 +181,7 @@ export function createLineApplicant(input: Partial<LineApplicant> & { lineUserId
     phone: input.phone,
     email: input.email,
     jobId: input.jobId,
-    jobTitle: input.jobTitle ?? job?.title,
+    jobTitle: input.jobTitle,
     selfPr: input.selfPr,
     currentStage: input.currentStage ?? "応募",
     source: "LINE",

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { demoCompany, demoJobs } from "@/lib/demo-data";
+
 
 function LineApplyForm() {
   const searchParams = useSearchParams();
@@ -21,7 +21,7 @@ function LineApplyForm() {
     department: "",
     phone: "",
     email: "",
-    jobId: demoJobs[0].id,
+    jobId: "",
     selfPr: "",
   });
 
@@ -77,7 +77,7 @@ function LineApplyForm() {
     <main className="min-h-screen bg-[#06c755]/10 px-5 py-8">
       <Card className="mx-auto max-w-2xl p-6 sm:p-8">
         <p className="text-sm font-semibold text-[#06c755]">LINE応募フォーム</p>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">{demoCompany.name}に応募する</h1>
+        <h1 className="mt-2 text-2xl font-bold text-gray-900">採用応募フォーム</h1>
         <p className="mt-3 text-sm leading-6 text-gray-600">
           入力後の連絡はすべて公式LINEで届きます。高校生でもスマホだけで応募できる想定です。
         </p>
@@ -85,22 +85,13 @@ function LineApplyForm() {
         <form onSubmit={submit} className="mt-7 space-y-5">
           <div>
             <Label htmlFor="jobId">希望職種</Label>
-            <select
-              id="jobId"
-              value={form.jobId}
-              onChange={(event) => update("jobId", event.target.value)}
-              className="mt-2 h-10 w-full rounded-lg border border-input bg-white px-3 text-sm"
-            >
-              {demoJobs.map((job) => (
-                <option key={job.id} value={job.id}>{job.title}</option>
-              ))}
-            </select>
+            <Input id="jobId" className="mt-2" value={form.jobId} onChange={(e) => update("jobId", e.target.value)} placeholder="希望職種を入力" />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="name">氏名 *</Label>
-              <Input id="name" className="mt-2" value={form.name} onChange={(e) => update("name", e.target.value)} required placeholder="山田 太郎" />
+              <Input id="name" className="mt-2" value={form.name} onChange={(e) => update("name", e.target.value)} required placeholder="氏名" />
             </div>
             <div>
               <Label htmlFor="school">学校名 *</Label>

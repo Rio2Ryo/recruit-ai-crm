@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { funnelStages, type FunnelStage } from "@/lib/demo-data";
+import { funnelStages, type FunnelStage } from "@/lib/recruiting-stages";
 import { getLineApplicant, updateLineApplicant } from "@/lib/line-applicant-store";
 import { scheduleRuleMessagesForApplicant } from "@/lib/line-scheduler";
 import { runStageAutomation } from "@/lib/line-workflow";

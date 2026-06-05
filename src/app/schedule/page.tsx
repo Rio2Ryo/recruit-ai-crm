@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { demoCompany } from "@/lib/demo-data";
 
 type PublicScheduleEvent = {
   id: string;
@@ -118,7 +117,7 @@ function PublicSchedulePageInner() {
             <CalendarDays className="size-4" />
             Recruit Schedule
           </div>
-          <h1 className="mt-2 text-2xl font-bold text-gray-950">{demoCompany.name} 日程予約</h1>
+          <h1 className="mt-2 text-2xl font-bold text-gray-950">面接・見学 日程予約</h1>
           <p className="mt-3 text-sm leading-6 text-gray-600">
             面接・説明会の希望日時を選んで予約してください。公開中で空きがある枠だけ表示されます。
           </p>
@@ -171,7 +170,7 @@ function PublicSchedulePageInner() {
             <form onSubmit={submit} className="mt-4 space-y-4">
               <div>
                 <Label htmlFor="applicantName">氏名 *</Label>
-                <Input id="applicantName" className="mt-2" value={applicantName} onChange={(event) => setApplicantName(event.target.value)} required placeholder="山田 太郎" />
+                <Input id="applicantName" className="mt-2" value={applicantName} onChange={(event) => setApplicantName(event.target.value)} required placeholder="氏名" />
               </div>
               <div>
                 <Label htmlFor="contact">連絡先</Label>

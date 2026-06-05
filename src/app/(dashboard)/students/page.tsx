@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { demoStudents } from "@/lib/demo-data";
 
 type StudentRow = {
   id: string;
@@ -29,7 +28,7 @@ export default function StudentsPage() {
       .catch(() => setLineStudents([]));
   }, []);
 
-  const students: StudentRow[] = [...lineStudents, ...demoStudents];
+  const students: StudentRow[] = lineStudents;
 
   return (
     <>
@@ -59,12 +58,18 @@ export default function StudentsPage() {
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
+              {students.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-500">
+                    候補者データはまだありません。ダミーデータは表示していません。
+                  </td>
+                </tr>
+              ) : students.map((student) => (
                 <tr key={student.id} className="border-b border-gray-100 last:border-0">
                   <td className="px-6 py-4 font-medium text-gray-900">{student.name}</td>
                   <td className="px-6 py-4 text-gray-600">
                     <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
-                      {student.source ?? "Web"}
+                      {student.source ?? "LINE"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-600">{student.school}</td>

@@ -1,13 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/header";
-import {
-  demoPipelineCandidates,
-  pipelineStages,
-  type PipelineCandidate,
-  type PipelineStage,
-} from "@/lib/demo-data";
+import { pipelineStages, type FunnelStage, type PipelineStage } from "@/lib/recruiting-stages";
+
+type PipelineCandidate = {
+  id: string;
+  name: string;
+  school: string;
+  jobTitle: string;
+  score: number;
+  stage: PipelineStage;
+  updatedAt: string;
+  note?: string;
+};
+
+type StudentRow = {
+  id: string;
+  name: string;
+  school: string;
+  jobTitle?: string;
+  status: FunnelStage;
+  score?: number;
+  updatedAt?: string;
+  feedback?: string;
+  lastMessage?: string;
+};
+
+function toPipelineStage(stage: FunnelStage): PipelineStage {
+  if (stage === "LINE流入") return "マッチング候補";
+  if (stage === "応募" || stage === "書類選考") return "応募受付";
+  if (stage === "一次面接" || stage === "最終面接") return "面接";
+  if (stage === "内定" || stage === "入社") return "内定";
+  return "応募受付";
+}
 import { ArrowRight, StickyNote, User } from "lucide-react";
 
 const stageConfig: Record<
@@ -135,7 +161,27 @@ function CandidateCard({
 }
 
 export default function ApplicationsPage() {
-  const [candidates, setCandidates] = useState(demoPipelineCandidates);
+  const [candidates, setCandidates] = useState<PipelineCandidate[]>([]);
+
+  useEffect(() => {
+    fetch("/api/line/applicants", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const json = await response.json();
+        const rows = (json.students ?? []) as StudentRow[];
+        setCandidates(rows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          school: row.school,
+          jobTitle: row.jobTitle ?? "希望職種未入力",
+          score: row.score ?? 0,
+          stage: toPipelineStage(row.status),
+          updatedAt: row.updatedAt?.slice(0, 10) ?? "日付未取得",
+          note: row.feedback ?? row.lastMessage,
+        })));
+      })
+      .catch(() => setCandidates([]));
+  }, []);
 
   function handleMove(id: string, direction: "forward" | "backward") {
     setCandidates((prev) =>

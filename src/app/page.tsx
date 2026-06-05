@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { demoCompany } from "@/lib/demo-data";
 
 export default function Home() {
   return (
@@ -11,17 +10,17 @@ export default function Home() {
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-indigo-300">Recruit AI CRM</p>
           <h1 className="mt-4 text-5xl font-bold tracking-tight">中小製造業向けの採用支援アプリ</h1>
           <p className="mt-6 text-lg leading-8 text-slate-300">
-            企業ページ公開、応募受付、候補者管理、学校CRM、AIマッチング支援をひとつにまとめたデモUIです。
+            企業ページ公開、応募受付、候補者管理、学校CRM、AIマッチング支援をひとつにまとめた採用管理ツールです。
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/dashboard" className={buttonVariants({ size: "lg" })}>
               管理画面を見る
             </Link>
             <Link
-              href={`/company/${demoCompany.slug}`}
+              href="/line/apply"
               className={buttonVariants({ size: "lg", variant: "outline", className: "border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white" })}
             >
-              公開企業ページを見る
+              応募フォームを見る
             </Link>
           </div>
         </div>
@@ -32,12 +31,12 @@ export default function Home() {
             <p className="mt-2 text-sm text-slate-300">ダッシュボード、求人管理、候補者CRM、学校接点管理のUIを確認できます。</p>
           </Card>
           <Card className="border-white/10 bg-white/5 p-6 text-white">
-            <h2 className="text-lg font-semibold">公開採用ページ</h2>
-            <p className="mt-2 text-sm text-slate-300">高校生向けの企業紹介ページと求人詳細、応募フォームの導線を用意しています。</p>
+            <h2 className="text-lg font-semibold">応募フォーム</h2>
+            <p className="mt-2 text-sm text-slate-300">LINE連携から応募受付、候補者保存、日程予約までの導線を確認できます。</p>
           </Card>
           <Card className="border-white/10 bg-white/5 p-6 text-white">
-            <h2 className="text-lg font-semibold">DB未接続デモ</h2>
-            <p className="mt-2 text-sm text-slate-300">まずは見せられるUIを優先し、データ接続は次フェーズで行う前提です。</p>
+            <h2 className="text-lg font-semibold">実データ表示</h2>
+            <p className="mt-2 text-sm text-slate-300">管理画面は登録済みの実データだけを表示します。ダミーデータは表示しません。</p>
           </Card>
         </div>
       </div>

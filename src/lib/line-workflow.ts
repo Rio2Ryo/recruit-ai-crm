@@ -1,6 +1,6 @@
 import "server-only";
 import { getLineOperationalSettingsAsync } from "@/lib/line-settings-store";
-import type { FunnelStage } from "@/lib/demo-data";
+import type { FunnelStage } from "@/lib/recruiting-stages";
 import type { LineApplicant, LineMessageLog } from "@/lib/line-recruiting";
 import { addLineMessageLog, addLineStepRun } from "@/lib/line-applicant-store";
 
