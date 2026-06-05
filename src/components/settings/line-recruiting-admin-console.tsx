@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { fetchWithRole } from "@/lib/rbac-client";
 
 type LineSettings = {
   officialAccountName: string;
@@ -146,8 +147,8 @@ export function LineRecruitingAdminConsole() {
 
   async function refreshReservationData() {
     const [applicantResponse, scheduleResponse] = await Promise.all([
-      fetch("/api/line/applicants", { cache: "no-store" }),
-      fetch("/api/line/scheduled", { cache: "no-store" }),
+      fetchWithRole("/api/line/applicants", { cache: "no-store" }),
+      fetchWithRole("/api/line/scheduled", { cache: "no-store" }),
     ]);
     if (applicantResponse.ok) {
       const json = await applicantResponse.json();
@@ -243,7 +244,7 @@ export function LineRecruitingAdminConsole() {
 
     setState({ type: "loading", message: "メッセージを予約中..." });
     try {
-      const response = await fetch("/api/line/scheduled", {
+      const response = await fetchWithRole("/api/line/scheduled", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -279,7 +280,7 @@ export function LineRecruitingAdminConsole() {
 
     setState({ type: "loading", message: "メッセージを送信中..." });
     try {
-      const response = await fetch("/api/line/messages", {
+      const response = await fetchWithRole("/api/line/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

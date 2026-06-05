@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink, Eye, FileText, ImageIcon, LockKeyhole, UploadCloud } from "lucide-react";
+import { fetchWithRole } from "@/lib/rbac-client";
 
 const statusClass: Record<string, string> = {
   解析済み: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -51,7 +52,7 @@ export default function ResumesPage() {
   const parsedCount = resumes.filter((resume) => resume.status === "解析済み").length;
 
   useEffect(() => {
-    fetch("/api/line/applicants", { cache: "no-store" })
+    fetchWithRole("/api/line/applicants", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return;
         const json = await response.json();

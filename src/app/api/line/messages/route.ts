@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listLineApplicants } from "@/lib/line-applicant-store";
 import { sendLineMessageForApplicant } from "@/lib/line-workflow";
+import { getRoleFromRequest, roleHasPermission } from "@/lib/rbac";
 
 export async function POST(request: NextRequest) {
+  const role = getRoleFromRequest(request);
+  if (!roleHasPermission(role, "message:send:1to1")) {
+    return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
+  }
+
   const input = (await request.json().catch(() => ({}))) as {
     applicantId?: string;
     targetMode?: "individual" | "job" | "all";
@@ -16,6 +22,9 @@ export async function POST(request: NextRequest) {
 
   const applicants = await listLineApplicants();
   const targetMode = input.targetMode ?? "individual";
+  if ((targetMode === "all" || targetMode === "job") && !roleHasPermission(role, "message:send:broadcast")) {
+    return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
+  }
   const targets = targetMode === "all"
     ? applicants
     : targetMode === "job"

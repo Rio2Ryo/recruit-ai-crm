@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { fetchWithRole } from "@/lib/rbac-client";
 
 type StudentRow = {
   id: string;
@@ -88,10 +89,10 @@ export default function StudentsPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/line/applicants", { cache: "no-store" })
+      fetchWithRole("/api/line/applicants", { cache: "no-store" })
         .then(async (response) => response.ok ? response.json() : { students: [] })
         .catch(() => ({ students: [] })),
-      fetch("/api/schedules/events", { cache: "no-store" })
+      fetchWithRole("/api/schedules/events", { cache: "no-store" })
         .then(async (response) => response.ok ? response.json() : { events: [] })
         .catch(() => ({ events: [] })),
     ]).then(([applicantsJson, schedulesJson]) => {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { funnelStages, type FunnelStage, type FunnelCandidate } from "@/lib/recruiting-stages";
+import { fetchWithRole } from "@/lib/rbac-client";
 import {
   ArrowDown,
   ArrowRight,
@@ -128,7 +129,7 @@ export default function PipelinePage() {
   const [mobileStage, setMobileStage] = useState<FunnelStage>("LINE流入");
 
   useEffect(() => {
-    fetch("/api/line/applicants", { cache: "no-store" })
+    fetchWithRole("/api/line/applicants", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return;
         const json = await response.json();

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Bell, Search, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { RoleSwitcher } from "@/components/rbac/role-switcher";
 
 export function Header({ title }: { title: string }) {
   return (
@@ -21,6 +22,7 @@ export function Header({ title }: { title: string }) {
               placeholder="検索..."
             />
           </div>
+          <RoleSwitcher />
           <Button variant="ghost" size="icon-sm" className="text-gray-500">
             <Bell className="size-4" />
           </Button>

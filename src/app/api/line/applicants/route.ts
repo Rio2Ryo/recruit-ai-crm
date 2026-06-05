@@ -6,10 +6,14 @@ import {
   toResumeRows,
   toStudentRow,
 } from "@/lib/line-applicant-store";
-import { getRoleFromRequest, maskLineApplicant } from "@/lib/rbac";
+import { getRoleFromRequest, maskLineApplicant, roleHasPermission } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
   const role = getRoleFromRequest(request);
+  if (!roleHasPermission(role, "status:view")) {
+    return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
+  }
+
   const applicants = (await listLineApplicants()).map((applicant) =>
     maskLineApplicant(applicant, role.id)
   );

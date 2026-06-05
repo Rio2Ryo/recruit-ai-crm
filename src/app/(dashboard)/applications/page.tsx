@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { pipelineStages, type FunnelStage, type PipelineStage } from "@/lib/recruiting-stages";
+import { fetchWithRole } from "@/lib/rbac-client";
 
 type PipelineCandidate = {
   id: string;
@@ -164,7 +165,7 @@ export default function ApplicationsPage() {
   const [candidates, setCandidates] = useState<PipelineCandidate[]>([]);
 
   useEffect(() => {
-    fetch("/api/line/applicants", { cache: "no-store" })
+    fetchWithRole("/api/line/applicants", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return;
         const json = await response.json();

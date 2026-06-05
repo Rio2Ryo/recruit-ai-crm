@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { funnelStages, type FunnelStage } from "@/lib/recruiting-stages";
 import { ArrowUpRight, BarChart3, Briefcase, GraduationCap, TrendingUp, Users, CalendarCheck, Award } from "lucide-react";
+import { fetchWithRole } from "@/lib/rbac-client";
 
 type StudentRow = {
   id: string;
@@ -32,7 +33,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/line/applicants", { cache: "no-store" })
+    fetchWithRole("/api/line/applicants", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return;
         const json = await response.json();

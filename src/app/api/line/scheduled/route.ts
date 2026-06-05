@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listLineApplicants } from "@/lib/line-applicant-store";
 import { cancelScheduledLineMessage, listScheduledLineMessages, scheduleLineMessage } from "@/lib/line-scheduler";
+import { getRoleFromRequest, roleHasPermission } from "@/lib/rbac";
 
-export async function GET() {
-  return NextResponse.json({ ok: true, schedules: await listScheduledLineMessages() });
+export async function GET(request: NextRequest) {
+  const role = getRoleFromRequest(request);
+  if (!roleHasPermission(role, "message:view")) {
+    return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
+  }
+  return NextResponse.json({ ok: true, role: role.id, schedules: await listScheduledLineMessages() });
 }
 
 export async function POST(request: NextRequest) {
-  // UI demo phase: the settings page auth is currently bypassed by middleware,
-  // so requiring a separate hidden admin key here makes the intuitive reservation UI unusable.
-  // Restore API-level admin-key enforcement together with real dashboard auth.
+  const role = getRoleFromRequest(request);
+  if (!roleHasPermission(role, "message:send:1to1")) {
+    return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
+  }
+
   const input = (await request.json().catch(() => ({}))) as {
     applicantId?: string;
     targetMode?: "individual" | "job" | "all";
@@ -21,6 +28,9 @@ export async function POST(request: NextRequest) {
 
   const applicants = await listLineApplicants();
   const targetMode = input.targetMode ?? "individual";
+  if ((targetMode === "all" || targetMode === "job") && !roleHasPermission(role, "message:send:broadcast")) {
+    return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
+  }
   const targets = targetMode === "all"
     ? applicants
     : targetMode === "job"
@@ -53,6 +63,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const role = getRoleFromRequest(request);
+  if (!roleHasPermission(role, "message:send:1to1")) {
+    return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
+  }
+
   const id = request.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ ok: false, error: "id is required" }, { status: 400 });
 
