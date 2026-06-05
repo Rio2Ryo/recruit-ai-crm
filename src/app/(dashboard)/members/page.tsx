@@ -1,6 +1,6 @@
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { MemberRoleManager } from "@/components/rbac/member-role-manager";
 import { permissionGroups, roleDefinitions } from "@/lib/rbac";
 import { Check, ShieldCheck } from "lucide-react";
 
@@ -31,34 +31,12 @@ export default function MembersPage() {
               応募者情報、履歴書、個人情報、LINE送信、日程調整を役職ごとの権限タグで管理します。
             </p>
           </div>
-          <Button disabled>メンバーを招待（近日対応）</Button>
+          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200">
+            実メンバーのみ登録
+          </span>
         </Card>
 
-        <Card className="overflow-hidden">
-          <div className="border-b border-gray-100 px-6 py-4">
-            <h3 className="text-base font-semibold text-gray-900">現在のメンバー割当</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr className="border-b border-gray-200">
-                  <th className="px-6 py-3 text-left font-medium text-gray-500">名前</th>
-                  <th className="px-6 py-3 text-left font-medium text-gray-500">メール</th>
-                  <th className="px-6 py-3 text-left font-medium text-gray-500">ロール</th>
-                  <th className="px-6 py-3 text-left font-medium text-gray-500">主要権限</th>
-                  <th className="px-6 py-3 text-left font-medium text-gray-500">参加日</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">
-                    登録済みメンバーはまだありません。ダミーメンバーは表示していません。
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </Card>
+        <MemberRoleManager />
 
         <Card className="p-6">
           <h3 className="text-base font-semibold text-gray-900">ロール別権限マトリクス</h3>
