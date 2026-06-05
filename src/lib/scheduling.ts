@@ -521,6 +521,17 @@ export async function createScheduleBooking(input: {
       },
     });
 
+    const applicantFilters = [
+      input.applicantId?.trim() ? { id: input.applicantId.trim() } : null,
+      input.lineUserId?.trim() ? { lineUserId: input.lineUserId.trim() } : null,
+    ].filter(Boolean) as Array<{ id: string } | { lineUserId: string }>;
+    if (applicantFilters.length > 0 && (input.status ?? "booked") === "booked") {
+      await prisma.lineApplicantRecord.updateMany({
+        where: { OR: applicantFilters },
+        data: { interviewAt: slot.startsAt, currentStage: "一次面接", updatedAt: new Date() },
+      });
+    }
+
     return toScheduleBooking(booking);
   } catch (error) {
     if (markDbUnavailable(error)) return createScheduleBookingInMemory(input);
