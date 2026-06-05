@@ -61,7 +61,7 @@ const navSections: {
     label: "設定",
     items: [
       { href: "/members", label: "メンバー", icon: Users, permissions: ["admin"] },
-      { href: "/settings/line", label: "LINE応募導線", icon: MessageCircle, permissions: ["message:view", "message:send:1to1", "template:create"] },
+      { href: "/settings/line", label: "LINE応募導線", icon: MessageCircle, permissions: ["message:send:1to1", "message:send:broadcast", "template:create"] },
     ],
   },
 ];
