@@ -3,7 +3,16 @@ import { type NextRequest, NextResponse } from "next/server";
 const SESSION_COOKIE = "recruit-ai-session-email";
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+
+  const hasAuthCode = Boolean(searchParams.get("code"));
+  const hasOtpToken = Boolean(searchParams.get("token_hash") && searchParams.get("type"));
+  if ((hasAuthCode || hasOtpToken) && pathname !== "/api/auth/callback") {
+    const callbackUrl = new URL("/api/auth/callback", request.url);
+    request.nextUrl.searchParams.forEach((value, key) => callbackUrl.searchParams.set(key, value));
+    if (!callbackUrl.searchParams.get("next")) callbackUrl.searchParams.set("next", "/dashboard");
+    return NextResponse.redirect(callbackUrl);
+  }
 
   const protectedPaths = [
     "/dashboard",
