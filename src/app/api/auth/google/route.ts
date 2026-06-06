@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAuthEnv } from "@/lib/supabase/env";
 
 export const dynamic = "force-dynamic";
-
-function hasSupabaseAuthEnv() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-}
 
 export async function GET(request: NextRequest) {
   const next = request.nextUrl.searchParams.get("next") || "/dashboard";
 
-  if (!hasSupabaseAuthEnv()) {
+  const env = getSupabaseAuthEnv();
+  if (!env) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", next);
     loginUrl.searchParams.set("error", "supabase_auth_env_missing");
@@ -22,8 +20,8 @@ export async function GET(request: NextRequest) {
 
   const response = NextResponse.next();
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.url,
+    env.anonKey,
     {
       cookies: {
         getAll() {

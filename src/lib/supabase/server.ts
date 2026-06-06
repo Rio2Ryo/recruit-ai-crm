@@ -1,20 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getSupabaseAuthEnv, hasSupabaseAuthEnv } from "@/lib/supabase/env";
 
-export function hasSupabaseAuthEnv() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-}
+export { hasSupabaseAuthEnv };
 
 export async function createClient() {
   const cookieStore = await cookies();
 
-  if (!hasSupabaseAuthEnv()) {
+  const env = getSupabaseAuthEnv();
+  if (!env) {
     throw new Error("Supabase Auth env is not configured");
   }
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.url,
+    env.anonKey,
     {
       cookies: {
         getAll() {
