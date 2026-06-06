@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRecruitingMemberRoleByEmail, listRecruitingMemberRoles, upsertRecruitingMemberRole } from "@/lib/rbac-members";
+import { listRecruitingMemberRoles, upsertRecruitingMemberRole } from "@/lib/rbac-members";
 
 export const SESSION_COOKIE = "recruit-ai-session-email";
 export const SESSION_ROLE_COOKIE = "recruit-ai-session-role";
@@ -27,17 +27,14 @@ export async function resolveAuthorizedMember(input: { email: string; name?: str
   return { ok: true as const, email, member };
 }
 
-export async function ensureMemberCanStartLogin(emailInput: string) {
+export async function ensureMemberCanLogin(emailInput: string) {
   const email = emailInput.trim().toLowerCase();
   if (!email) return { ok: false as const, error: "email_required" };
 
   const members = await listRecruitingMemberRoles();
   if (members.length === 0) {
-    await upsertRecruitingMemberRole({ email, name: email.split("@")[0], roleId: "executive", active: true });
-    const member = await getRecruitingMemberRoleByEmail(email);
-    return member
-      ? { ok: true as const, email, member }
-      : { ok: false as const, error: "member_role_is_not_assigned", email };
+    const member = await upsertRecruitingMemberRole({ email, name: email.split("@")[0], roleId: "executive", active: true });
+    return { ok: true as const, email, member };
   }
 
   const member = members.find((item) => item.email === email) ?? null;

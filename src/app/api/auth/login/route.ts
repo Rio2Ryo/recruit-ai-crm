@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ensureMemberCanStartLogin, safeNext } from "@/lib/auth-session";
-import { createClient, hasSupabaseAuthEnv } from "@/lib/supabase/server";
+import { applyAppSession, ensureMemberCanLogin, safeNext } from "@/lib/auth-session";
+import { hasInviteCodeConfigured, isValidInviteCode } from "@/lib/invite-code";
 
 export async function POST(request: NextRequest) {
-  if (!hasSupabaseAuthEnv()) {
+  if (!hasInviteCodeConfigured()) {
     return NextResponse.json(
-      { ok: false, error: "supabase_auth_env_missing", message: "ログイン設定が未完了です。" },
+      { ok: false, error: "invite_code_not_configured", message: "招待コードが未設定です。" },
       { status: 503 }
     );
   }
 
-  const body = await request.json().catch(() => null) as { email?: string; next?: string } | null;
+  const body = await request.json().catch(() => null) as { email?: string; inviteCode?: string; next?: string } | null;
   const email = body?.email?.trim().toLowerCase() ?? "";
+  const inviteCode = body?.inviteCode?.trim() ?? "";
   const next = safeNext(body?.next ?? null);
 
-  const memberCheck = await ensureMemberCanStartLogin(email);
+  const memberCheck = await ensureMemberCanLogin(email);
   if (!memberCheck.ok) {
     return NextResponse.json(
       { ok: false, error: memberCheck.error, email: "email" in memberCheck ? memberCheck.email : email },
@@ -22,29 +23,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = await createClient();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || new URL(request.url).origin;
-  const callbackUrl = new URL("/api/auth/callback", appUrl);
-  callbackUrl.searchParams.set("next", next);
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email: memberCheck.email,
-    options: {
-      emailRedirectTo: callbackUrl.toString(),
-      shouldCreateUser: true,
-    },
-  });
-
-  if (error) {
+  if (!inviteCode) {
     return NextResponse.json(
-      { ok: false, error: error.message, message: "Magic Linkの送信に失敗しました。" },
+      { ok: false, error: "invite_code_required", message: "招待コードを入力してください。" },
       { status: 400 }
     );
   }
 
-  return NextResponse.json({
+  if (!isValidInviteCode(inviteCode)) {
+    return NextResponse.json(
+      { ok: false, error: "invite_code_invalid", message: "招待コードが正しくありません。" },
+      { status: 403 }
+    );
+  }
+
+  const response = NextResponse.json({
     ok: true,
     email: memberCheck.email,
-    message: "ログイン用のMagic Linkを送信しました。メールを確認してください。",
+    next,
+    message: "ログインしました。",
   });
+  return applyAppSession(response, { email: memberCheck.email, roleId: memberCheck.member.roleId });
 }
