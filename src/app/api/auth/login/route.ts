@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const callbackUrl = new URL("/api/auth/callback", request.url);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || new URL(request.url).origin;
+  const callbackUrl = new URL("/api/auth/callback", appUrl);
   callbackUrl.searchParams.set("next", next);
 
   const { error } = await supabase.auth.signInWithOtp({
