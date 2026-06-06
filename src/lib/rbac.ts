@@ -223,7 +223,9 @@ export function getRoleDefinition(roleId?: string | null) {
 
 export function getRoleFromRequest(request: NextRequest) {
   return getRoleDefinition(
-    request.headers.get("x-rbac-role") ?? request.nextUrl.searchParams.get("role")
+    request.cookies.get("recruit-ai-session-role")?.value ??
+      request.headers.get("x-rbac-role") ??
+      request.nextUrl.searchParams.get("role")
   );
 }
 
