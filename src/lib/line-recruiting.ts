@@ -171,7 +171,7 @@ export function buildAutoReply(text: string, baseUrl: string, lineUserId?: strin
 export function createLineApplicant(input: Partial<LineApplicant> & { lineUserId: string }): LineApplicant {
   const now = new Date().toISOString();
   return {
-    id: input.id ?? `line-${Date.now()}`,
+    id: input.id ?? `line-${crypto.randomUUID()}`,
     lineUserId: input.lineUserId,
     friendId: input.friendId,
     displayName: input.displayName,

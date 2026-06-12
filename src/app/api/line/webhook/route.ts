@@ -111,8 +111,10 @@ export async function POST(request: NextRequest) {
     const userId = event.source?.userId;
 
     if (event.type === "follow" && event.replyToken) {
-      const applicant = await saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: "LINE流入", step: "welcome" });
-      await recordLineAction({ applicantId: applicant.id, lineUserId: applicant.lineUserId, type: "follow", label: "友だち追加" });
+      if (userId) {
+        const applicant = await saveLineApplicant({ lineUserId: userId, currentStage: "LINE流入", step: "welcome" });
+        await recordLineAction({ applicantId: applicant.id, lineUserId: applicant.lineUserId, type: "follow", label: "友だち追加" });
+      }
       await replyText(event.replyToken, buildAutoReply("応募", baseUrl, userId));
       handled.push("follow");
       continue;
@@ -145,8 +147,10 @@ export async function POST(request: NextRequest) {
         continue;
       }
       const text = messageEvent.message.text ?? "";
-      const applicant = await saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: text.includes("応募") ? "応募" : "LINE流入", lastMessage: text });
-      await recordLineAction({ applicantId: applicant.id, lineUserId: applicant.lineUserId, type: "message", label: text, detail: { intent: text.includes("応募") ? "apply" : "message" } });
+      if (userId) {
+        const applicant = await saveLineApplicant({ lineUserId: userId, currentStage: text.includes("応募") ? "応募" : "LINE流入", lastMessage: text });
+        await recordLineAction({ applicantId: applicant.id, lineUserId: applicant.lineUserId, type: "message", label: text, detail: { intent: text.includes("応募") ? "apply" : "message" } });
+      }
       await replyText(messageEvent.replyToken, buildAutoReply(text, baseUrl, userId));
       handled.push("message");
       continue;
@@ -154,8 +158,10 @@ export async function POST(request: NextRequest) {
 
     if (event.type === "postback" && event.replyToken) {
       const postbackEvent = event as LinePostbackEvent;
-      const applicant = await saveLineApplicant({ lineUserId: userId ?? "unknown", currentStage: "LINE流入", lastMessage: postbackEvent.postback.data });
-      await recordLineAction({ applicantId: applicant.id, lineUserId: applicant.lineUserId, type: "postback", label: postbackEvent.postback.data });
+      if (userId) {
+        const applicant = await saveLineApplicant({ lineUserId: userId, currentStage: "LINE流入", lastMessage: postbackEvent.postback.data });
+        await recordLineAction({ applicantId: applicant.id, lineUserId: applicant.lineUserId, type: "postback", label: postbackEvent.postback.data });
+      }
       await replyText(postbackEvent.replyToken, buildAutoReply(postbackEvent.postback.data, baseUrl, userId));
       handled.push("postback");
     }
