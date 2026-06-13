@@ -57,9 +57,13 @@
 3. マイグレーション実行（direct URLで）:
    ```bash
    DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres" \
-     npx prisma migrate dev --name init
+     npx prisma migrate dev --name legacy-models
    npx prisma generate
    ```
+   > **注意**: `migrate dev` は既存の2件のマイグレーション（schedule/line テーブル）を適用後、
+   > スキーマに未含有の17個のレガシーモデル（Company/Student/Application 等）用の
+   > 新しいマイグレーションファイルを `prisma/migrations/` に自動生成します。
+   > 生成されたファイルを `git add && git commit` してください。
 4. 初回ログインで `executive` ロールが自動付与される（`rbac-members.ts` 初期化ロジック）
 
 **影響**: DB接続なしではログイン・候補者保存・スケジュール・ドキュメント保存が一切機能しない。
