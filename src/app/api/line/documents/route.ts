@@ -2,7 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { addLineAttachment } from "@/lib/line-applicant-store";
 import { saveLineDocumentBytes, safeLineDocumentName } from "@/lib/line-document-storage";
 
+function isAuthorized(request: NextRequest) {
+  const adminKey = process.env.LINE_CLI_ADMIN_KEY ?? process.env.LINE_HARNESS_WEBHOOK_SECRET;
+  if (!adminKey) return false;
+  return request.headers.get("x-admin-key") === adminKey || request.headers.get("x-line-harness-secret") === adminKey;
+}
+
 export async function POST(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
   const input = (await request.json().catch(() => ({}))) as {
     lineUserId?: string;
     friendId?: string;

@@ -58,6 +58,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const sessionEmail = request.cookies.get("recruit-ai-session-email")?.value?.trim();
+  if (!sessionEmail) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
   const attachment = (await listLineApplicants())
     .flatMap((applicant) => applicant.attachments ?? [])
