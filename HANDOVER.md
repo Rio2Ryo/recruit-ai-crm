@@ -124,6 +124,8 @@
 ### Supabase Auth について
 **注意**: 旧バージョンでは Supabase Auth（Magic Link/Google OAuth）を使用していたが、現在は独自の招待コード方式に変更済み。`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` は **不要**。必要なのは `DATABASE_URL` (Prisma pg接続用) のみ。
 
+**⚠️ セキュリティ修正済み**: `/api/auth/google` ルートは残っているが `SUPABASE_ANON_KEY` 未設定のため無効。以前は `SUPABASE_SERVICE_ROLE_KEY` をフォールバックで anon key に使う危険なコードがあったが修正済み（`src/lib/supabase/env.ts`）。B1完了後に Supabase vars を追加する際も **`SUPABASE_SERVICE_ROLE_KEY` は Vercel には追加しないこと**。
+
 ---
 
 ## B1完了後の実装TODO（コード変更が必要）
