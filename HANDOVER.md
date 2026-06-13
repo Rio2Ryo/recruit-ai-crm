@@ -110,7 +110,7 @@
 ### Vercel 未設定 / 要追加 ❌
 - `DATABASE_URL` (Supabase pgbouncer URL — port 6543)
 - `DIRECT_URL` (Supabase direct URL — port 5432、migrate時のみ使用)
-- `INVITE_CODE` (任意: 招待コード文字列。未設定時は `src/lib/invite-code.ts` のデフォルト値)
+- `RECRUIT_ADMIN_INVITE_CODES` (推奨: カンマ/改行区切りで複数設定可) または `RECRUIT_ADMIN_INVITE_CODE` (単一コード) — 未設定時は全員ログイン不可
 - `LINE_HARNESS_API_URL`
 - `LINE_HARNESS_API_KEY`
 - `LINE_HARNESS_WEBHOOK_SECRET`
