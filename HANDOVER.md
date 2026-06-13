@@ -136,7 +136,7 @@ LINE API ルートは `middleware.ts` の `protectedPaths` に含まれておら
 
 | リスク | 該当ルート | 影響 |
 |---|---|---|
-| 🔴 高 | `POST /api/line/messages` (`targetMode: "all"`) | 未認証でLINE全応募者に一斉送信可能 |
+| ✅ 修正済 | `POST /api/line/messages` (`targetMode: "all"`) | `recruit-ai-session-email` Cookie チェック追加 |
 | 🟡 中 | `POST /api/line/applicants/[id]` (PATCH) | 未認証でステージ変更→自動メッセージトリガー |
 | 🟡 中 | `POST /api/line/applicants/[id]/message` | 未認証で個別LINE送信可能 |
 | 🟢 低 | `GET /api/line/applicants` など | 未認証でインメモリ応募者データ閲覧 (Previewでは許容) |
