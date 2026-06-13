@@ -9,10 +9,16 @@ function getBaseUrl(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const input = await request.json();
+
+  const name = typeof input.name === "string" ? input.name.trim() : "";
+  if (!name) {
+    return NextResponse.json({ ok: false, error: "name is required" }, { status: 400 });
+  }
+
   const applicant = await saveLineApplicant({
     lineUserId: input.lineUserId || `line-anonymous-${Date.now()}`,
     friendId: input.friendId,
-    name: input.name,
+    name,
     school: input.school,
     department: input.department,
     phone: input.phone,
