@@ -28,7 +28,7 @@ function getBaseUrl(request: NextRequest) {
 
 function isAuthorized(request: NextRequest) {
   const adminKey = process.env.LINE_SETTINGS_ADMIN_KEY ?? process.env.LINE_CLI_ADMIN_KEY;
-  if (!adminKey) return true;
+  if (!adminKey) return false;
   return request.headers.get("x-admin-key") === adminKey;
 }
 
