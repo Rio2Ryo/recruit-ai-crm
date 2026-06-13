@@ -7,6 +7,11 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const sessionEmail = request.cookies.get("recruit-ai-session-email")?.value?.trim();
+  if (!sessionEmail) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
   const role = getRoleFromRequest(request);
   if (!roleHasPermission(role, "message:send:1to1")) {
     return NextResponse.json({ ok: false, error: "forbidden", role: role.id }, { status: 403 });
