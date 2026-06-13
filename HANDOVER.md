@@ -115,7 +115,8 @@
 - `DATABASE_URL` (Supabase pgbouncer URL — port 6543)
 - `DIRECT_URL` (Supabase direct URL — port 5432、migrate時のみ使用)
 - `RECRUIT_ADMIN_INVITE_CODES` (推奨: カンマ/改行区切りで複数設定可) または `RECRUIT_ADMIN_INVITE_CODE` (単一コード) — 未設定時は全員ログイン不可
-- `LINE_CLI_ADMIN_KEY` (任意の長いランダム文字列 — 未設定時は `/api/line/send` エンドポイントが全リクエストを拒否)
+- `LINE_CLI_ADMIN_KEY` (任意の長いランダム文字列 — 未設定時は `/api/line/send`, `/api/integrations/line-harness/send`, `/api/line/applicants/[id]/step-message` が全リクエストを拒否)
+- `CRON_SECRET` (任意の長いランダム文字列 — 未設定時は `/api/line/scheduled/process` が全リクエストを拒否; Vercel Cronと合わせること)
 - `LINE_HARNESS_API_URL`
 - `LINE_HARNESS_API_KEY`
 - `LINE_HARNESS_WEBHOOK_SECRET`
