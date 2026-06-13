@@ -130,6 +130,21 @@
 
 ---
 
+## ⚠️ 本番前セキュリティTODO（未修正）
+
+LINE API ルートは `middleware.ts` の `protectedPaths` に含まれておらず、`getRoleFromRequest` が認証なしリクエストに `executive` ロールをデフォルト付与する。Preview フェーズの設計判断だが、**本番前に必ず対処すること**:
+
+| リスク | 該当ルート | 影響 |
+|---|---|---|
+| 🔴 高 | `POST /api/line/messages` (`targetMode: "all"`) | 未認証でLINE全応募者に一斉送信可能 |
+| 🟡 中 | `POST /api/line/applicants/[id]` (PATCH) | 未認証でステージ変更→自動メッセージトリガー |
+| 🟡 中 | `POST /api/line/applicants/[id]/message` | 未認証で個別LINE送信可能 |
+| 🟢 低 | `GET /api/line/applicants` など | 未認証でインメモリ応募者データ閲覧 (Previewでは許容) |
+
+**推奨対処**: `src/middleware.ts` の `protectedPaths` に `/api/line/` プレフィックスを追加するか、各ルートに `recruit-ai-session-email` Cookie チェックを追加する。
+
+---
+
 ## B1完了後の実装TODO（コード変更が必要）
 
 1. **Pipelineページを DB から取得**
