@@ -1,6 +1,6 @@
 # Recruit AI CRM — 引き継ぎチェックリスト
 
-作成: 2026-06-09 (Shiro / shiro-recruit-handover)
+最終更新: 2026-06-13 (Shiro / shiro/bug-fixes PR)
 
 ---
 
@@ -9,139 +9,94 @@
 | 項目 | 内容 |
 |---|---|
 | 目的 | LINE経由の採用フロー管理CRM（製造業向け高卒採用） |
-| フロントエンド | Next.js 15 / Tailwind / shadcn — `projects/recruit-ai-crm/` |
-| DB / Auth | Supabase (PostgreSQL + Supabase Auth) |
+| フロントエンド | Next.js 16 / Tailwind / shadcn — `projects/recruit-ai-crm/` |
+| DB / Auth | Supabase PostgreSQL + 招待コードログイン（セッションCookie） |
 | ホスティング | Vercel — `https://recruit-ai-crm.vercel.app` |
 | LINEバックエンド | LINE Harness (Cloudflare Workers+D1) — `projects/line-harness-recruit/` |
-| Prisma schema | 完成済み (Company / Student / Application / Job / School ほか全モデル) |
+| Prisma | v7 / `@prisma/adapter-pg` — スキーマ完成、migrate未実施 |
 
 ---
 
-## 完成済み（ローカルコード）
+## 完成済み（mainブランチ）
 
-- [x] Prisma schema 全モデル定義 (`prisma/schema.prisma`)
+- [x] Prisma schema 全モデル定義 (`prisma/schema.prisma`) — 26モデル
 - [x] LINE Harness APIクライアント (`src/lib/line-harness.ts`)
-  - `listFriends`, `sendMessage`, `setMetadata`, `addTag`
 - [x] LINE Harness Webhook受け口 (`POST /api/integrations/line-harness/submission`)
-  - フォーム送信 → 応募者オブジェクト作成 → Harness側 metadata/tag 返し書き
 - [x] LINE Harness 送信プロキシ (`POST /api/integrations/line-harness/send`)
-- [x] LINE直接Webhook (`POST /api/line/webhook`) — follow/message/postback処理
-- [x] LINE内応募フォーム (`/line/apply`)
-- [x] Kanbanパイプライン画面 (`/pipeline`) — デモデータ + インメモリLINE応募者表示
-- [x] LINE設定画面 (`/settings/line`) + 環境変数ステータスAPI
-- [x] LINE CLIスクリプト (`scripts/line-cli.mjs`) — send / broadcast / quota / profile
-- [x] 連携ドキュメント (`docs/line-harness-integration.md`, `docs/line-official-account.md`)
-- [x] Vercel にデプロイ済み (`commongiftedtokyo` org, project `recruit-ai-crm`)
+- [x] LINE直接Webhook (`POST /api/line/webhook`) — follow/message/postback/ファイル添付処理
+- [x] LINE内応募フォーム (`/line/apply`) — エラー表示・バリデーション含む
+- [x] Kanbanパイプライン画面 (`/pipeline`)
+- [x] LINE設定画面 (`/settings/line`)
+- [x] LINE CLIスクリプト (`scripts/line-cli.mjs`)
+- [x] **認証**: 招待コードログイン (`/login`) — セッションCookie + `src/middleware.ts`
+- [x] **RBAC**: ロール管理 (`src/lib/rbac.ts`, `rbac-members.ts`, `rbac-client.ts`)
+  - `executive` / `manager` / `member` / `viewer` ロール
+- [x] **スケジューリング**: 面接・会社見学枠管理 (`src/lib/scheduling.ts`, `line-scheduler.ts`)
+  - 公開枠 → `/schedule` ページで学生が予約
+- [x] **ドキュメント管理**: LINEから送られた添付書類の保存 (`src/lib/line-document-storage.ts`)
+- [x] **分析API**: LINE行動ログ集計 (`/api/line/analytics`)
+- [x] Vercelデプロイ済み (`commongiftedtokyo` org)
 - [x] Vercel env: `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_CHANNEL_SECRET`, `NEXT_PUBLIC_APP_URL` 設定済み
 
 ---
 
 ## ブロッカー一覧（外部セットアップ待ち）
 
-### B1. Supabase プロジェクト作成・接続【必須】
+### B1. Supabase プロジェクト作成・DB接続【最優先・必須】
 
-**状態**: `.env` には `DATABASE_URL` のみ(Prisma Postgres形式の仮値)。Supabaseプロジェクト未作成。
+**状態**: `prisma.ts` は `@prisma/adapter-pg` 使用。DATABASE_URL未設定のため **ランタイムでDB呼び出し全滅**。
+ビルドは通る（build-time フォールバックURL使用）が、ログインするとメンバーロール取得で500エラー。
 
 **必要な作業**:
 1. Supabase で新規プロジェクト作成
-2. 以下を Vercel env (`recruit-ai-crm` プロジェクト) に追加:
+2. 以下を Vercel env に追加:
    ```
    DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:6543/postgres?pgbouncer=true
    DIRECT_URL=postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres
-   NEXT_PUBLIC_SUPABASE_URL=https://[REF].supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-   SUPABASE_SERVICE_ROLE_KEY=...
    ```
-3. ローカルから `npx prisma migrate deploy` でスキーマをSupabaseに適用
-4. `src/middleware.ts` の bypass モードを外し Supabase Auth 接続
+3. マイグレーション実行（direct URLで）:
+   ```bash
+   DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres" \
+     npx prisma migrate dev --name init
+   npx prisma generate
+   ```
+4. 初回ログインで `executive` ロールが自動付与される（`rbac-members.ts` 初期化ロジック）
 
-**影響**: DB接続なしではユーザー認証・永続化が一切機能しない。
+**影響**: DB接続なしではログイン・候補者保存・スケジュール・ドキュメント保存が一切機能しない。
 
 ---
 
-### B2. LINE Harness (Cloudflare) デプロイ【優先高】
+### B3. LINE Developers Webhook URL 登録【今すぐ可能】
+
+**状態**: `LINE_CHANNEL_ACCESS_TOKEN` / `LINE_CHANNEL_SECRET` は Vercel 設定済み。Webhook URL未設定。
+
+**必要な作業**:
+1. LINE Developers Console → Messaging API channel → Webhook URL:
+   `https://recruit-ai-crm.vercel.app/api/line/webhook`
+2. Webhook ON、応答メッセージ OFF
+3. Verify で疎通確認
+
+**影響**: LINE公式アカウントへのメッセージがCRMに届かない。B1と独立して今すぐ実施可能。
+
+---
+
+### B2. LINE Harness (Cloudflare) デプロイ【B3の後】
 
 **状態**: `projects/line-harness-recruit/` にコードあり。Cloudflare未デプロイ。
 
 **必要な作業**:
-1. Cloudflare アカウントで `wrangler login`
-2. `cd projects/line-harness-recruit && npx create-line-harness`
-   または手動: D1作成 → Worker デプロイ → Pages デプロイ
-3. 管理画面でAPI Keyを発行
-4. 以下を Vercel env に追加:
+1. `wrangler login`
+2. D1作成 → Worker → Pages デプロイ (`cd projects/line-harness-recruit && npx create-line-harness`)
+3. 管理画面でAPI Key発行
+4. Vercel env に追加:
    ```
    LINE_HARNESS_API_URL=https://[your-worker].workers.dev
-   LINE_HARNESS_API_KEY=[発行したAPIキー]
-   LINE_HARNESS_WEBHOOK_SECRET=[任意のシークレット文字列]
+   LINE_HARNESS_API_KEY=[APIキー]
+   LINE_HARNESS_WEBHOOK_SECRET=[シークレット]
    ```
-5. LINE Harness 側で Outgoing Webhook を設定:
-   `POST https://recruit-ai-crm.vercel.app/api/integrations/line-harness/submission`
-   ヘッダ: `x-line-harness-secret: [LINE_HARNESS_WEBHOOK_SECRET]`
+5. Harness側 Outgoing Webhook: `POST https://recruit-ai-crm.vercel.app/api/integrations/line-harness/submission`
 
-**影響**: Harness未接続でも直接Webhook (`/api/line/webhook`) は動作するが、タグ・ステップ配信・LIFF フォームが使えない。
-
----
-
-### B3. LINE Developers Webhook URL 登録【B2前に完了可能】
-
-**状態**: `LINE_CHANNEL_ACCESS_TOKEN` / `LINE_CHANNEL_SECRET` は Vercel に設定済み。Webhook URL 未設定。
-
-**必要な作業**:
-1. LINE Developers Console → Messaging API channel → Webhook URL を設定:
-   `https://recruit-ai-crm.vercel.app/api/line/webhook`
-2. Webhook を ON、応答メッセージを OFF に設定
-3. Verify ボタンで疎通確認
-
-**影響**: Webhook未設定ではLINE公式アカウントへのメッセージが届かない。
-
----
-
-### B4. Supabase Auth 有効化【B1完了後】
-
-**状態**: `src/middleware.ts` は auth bypass中。
-
-**必要な作業**:
-1. Supabase で Auth を有効化 (Email or Magic Link)
-2. `src/middleware.ts` を実装済みコード (`src/lib/supabase/server.ts`) を使う形に変更
-3. `/login` ページを有効化
-
----
-
-## 次フェーズ実装 TODO（コード変更が必要）
-
-優先度順:
-
-1. **Supabase接続後: Pipelineページを DB から取得**
-   - `src/app/(dashboard)/pipeline/page.tsx` の `demoFunnelCandidates` を Prisma query に置換
-   - `src/lib/line-applicant-store.ts` のインメモリストアを `Student`/`Application` への upsert に変更
-
-2. **LINE Harness submission → DB upsert**
-   - `POST /api/integrations/line-harness/submission` で `Student` + `Application` を Prisma で upsert
-   - `lineUserId` / `friendId` を `Student.metadata` に保持
-
-3. **ステージ移動 → Harness metadata 同期**
-   - パイプラインの「進める/戻す」ボタン → `PUT /api/integrations/line-harness/send` でタグ更新
-
-4. **候補者カード → LINE送信ボタン**
-   - `POST /api/integrations/line-harness/send` に接続
-
-5. **Auth有効化後: ロール別アクセス制御**
-   - `CompanyMember.canManageLine` / `canViewResumes` を middleware で使用
-
----
-
-## Yakon 判断依頼
-
-以下について Go/No-go + 担当者アサインをお願いします:
-
-| # | 作業 | リスク | 推奨 |
-|---|---|---|---|
-| B1 | Supabaseプロジェクト作成 | 低 (無料枠OK) | **最優先でGo** — 他全ての基盤 |
-| B2 | Cloudflare/LINE Harnessデプロイ | 低〜中 (LINE公式に繋がる) | B1と並行可 |
-| B3 | LINE Webhook URL登録 | 低 (Vercel側設定なし) | **今すぐGo可能** |
-| B4 | Supabase Auth有効化 | 中 (ユーザー体験に影響) | B1完了後 |
-
-**推奨次アクション**: B3 (LINE Webhook登録) → B1 (Supabase作成) の順で進める。B2はCloudflareアカウント保有者がセットアップ。
+**影響**: Harness未接続でも直接Webhookは動作。タグ管理・ステップ配信が使えない。
 
 ---
 
@@ -153,20 +108,31 @@
 - `NEXT_PUBLIC_APP_URL` = `https://recruit-ai-crm.vercel.app`
 
 ### Vercel 未設定 / 要追加 ❌
-- `DATABASE_URL` (Supabase pgbouncer URL)
-- `DIRECT_URL` (Supabase direct URL)
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `DATABASE_URL` (Supabase pgbouncer URL — port 6543)
+- `DIRECT_URL` (Supabase direct URL — port 5432、migrate時のみ使用)
+- `INVITE_CODE` (任意: 招待コード文字列。未設定時は `src/lib/invite-code.ts` のデフォルト値)
 - `LINE_HARNESS_API_URL`
 - `LINE_HARNESS_API_KEY`
 - `LINE_HARNESS_WEBHOOK_SECRET`
-- `LINE_HARNESS_APPLIED_TAG_ID` (任意: 応募済みタグのUUID)
-- `ANTHROPIC_API_KEY` (AI matching機能用)
+- `LINE_HARNESS_APPLIED_TAG_ID` (任意)
+- `ANTHROPIC_API_KEY` (AIマッチング機能用)
 
-### ローカル `.env.vercel.local` に存在するが Vercel 未設定
-- `LINE_CLI_ADMIN_KEY` (空 — 任意)
-- `LINE_SETTINGS_ADMIN_KEY` (空 — 任意)
+### Supabase Auth について
+**注意**: 旧バージョンでは Supabase Auth（Magic Link/Google OAuth）を使用していたが、現在は独自の招待コード方式に変更済み。`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` は **不要**。必要なのは `DATABASE_URL` (Prisma pg接続用) のみ。
+
+---
+
+## B1完了後の実装TODO（コード変更が必要）
+
+1. **Pipelineページを DB から取得**
+   - `src/app/(dashboard)/pipeline/page.tsx` のデモデータを Prisma query に置換
+   - `src/lib/line-applicant-store.ts` のインメモリストアを `Student`/`Application` upsert に変更
+
+2. **LINE Harness submission → DB upsert**
+   - `POST /api/integrations/line-harness/submission` で Prisma upsert
+
+3. **ステージ移動 → Harness metadata 同期**
+   - パイプライン「進める」ボタン → Harness タグ更新
 
 ---
 
@@ -174,32 +140,39 @@
 
 ```
 projects/recruit-ai-crm/
-├── prisma/schema.prisma          # DB スキーマ (完成済み)
+├── prisma/schema.prisma           # DBスキーマ 26モデル
+├── prisma/migrations/             # 2件のマイグレーション (未apply)
 ├── src/
+│   ├── middleware.ts              # 認証 (招待コード → セッションCookie)
 │   ├── app/
+│   │   ├── (auth)/login/          # ログインページ
 │   │   ├── (dashboard)/
-│   │   │   ├── pipeline/page.tsx # 歩留まり管理Kanban
-│   │   │   └── settings/line/    # LINE設定画面
+│   │   │   ├── pipeline/          # 候補者パイプライン
+│   │   │   ├── schedules/         # 面接・見学枠管理
+│   │   │   ├── members/           # メンバー・ロール管理
+│   │   │   └── settings/line/     # LINE設定
 │   │   ├── api/
+│   │   │   ├── auth/              # login / logout / callback / me
 │   │   │   ├── integrations/line-harness/
-│   │   │   │   ├── submission/   # Harness→CRM Webhook受け口
-│   │   │   │   └── send/         # CRM→Harness送信プロキシ
-│   │   │   └── line/
-│   │   │       ├── webhook/      # LINE直接Webhook
-│   │   │       ├── apply/        # 応募受付
-│   │   │       └── applicants/   # インメモリ応募者一覧
-│   │   └── line/apply/           # LINEフォームUI
+│   │   │   ├── line/              # webhook / apply / applicants / documents / analytics
+│   │   │   ├── schedules/         # events / slots / bookings
+│   │   │   └── rbac/              # members / roles
+│   │   ├── line/apply/            # LINEフォームUI
+│   │   └── schedule/              # 学生向け予約ページ
 │   └── lib/
-│       ├── line-harness.ts       # Harness APIクライアント
-│       ├── line-applicant-store.ts # インメモリストア (暫定)
-│       └── line-recruiting.ts    # 応募者型定義
+│       ├── prisma.ts              # PrismaClient (@prisma/adapter-pg)
+│       ├── auth-session.ts        # セッション管理
+│       ├── invite-code.ts         # 招待コード検証
+│       ├── rbac.ts / rbac-members.ts / rbac-client.ts
+│       ├── scheduling.ts / line-scheduler.ts
+│       ├── line-applicant-store.ts # インメモリストア (B1完了後にDB移行)
+│       ├── line-document-storage.ts
+│       └── line-workflow.ts
 ├── docs/
 │   ├── line-harness-integration.md
-│   └── line-official-account.md
-└── scripts/line-cli.mjs          # LINE CLI
+│   ├── line-harness-capabilities.md
+│   └── preview-readiness.md
+└── scripts/line-cli.mjs
 
-projects/line-harness-recruit/    # LINE Harness OSS (Cloudflare未デプロイ)
-├── apps/worker/                  # Cloudflare Worker (API)
-├── apps/web/                     # 管理ダッシュボード (Next.js)
-└── packages/                     # SDK / MCP server / DB など
+projects/line-harness-recruit/     # LINE Harness OSS (Cloudflare未デプロイ)
 ```
