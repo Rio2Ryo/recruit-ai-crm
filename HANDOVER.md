@@ -118,16 +118,25 @@
 - `RECRUIT_ADMIN_INVITE_CODES` (推奨: カンマ/改行区切りで複数設定可) または `RECRUIT_ADMIN_INVITE_CODE` (単一コード) — 未設定時は全員ログイン不可
 - `LINE_CLI_ADMIN_KEY` (任意の長いランダム文字列 — 未設定時は `/api/line/send`, `/api/integrations/line-harness/send`, `/api/line/applicants/[id]/step-message` が全リクエストを拒否)
 - `CRON_SECRET` (任意の長いランダム文字列 — 未設定時は `/api/line/scheduled/process` が全リクエストを拒否; Vercel Cronと合わせること)
+- `SUPABASE_SERVICE_ROLE_KEY` (Supabase Storage用管理キー — 未設定時はLINE添付書類が `/tmp` に保存されVercelで揮発)
 - `LINE_HARNESS_API_URL`
 - `LINE_HARNESS_API_KEY`
 - `LINE_HARNESS_WEBHOOK_SECRET`
 - `LINE_HARNESS_APPLIED_TAG_ID` (任意)
 - `ANTHROPIC_API_KEY` (AIマッチング機能用)
 
-### Supabase Auth について
-**注意**: 旧バージョンでは Supabase Auth（Magic Link/Google OAuth）を使用していたが、現在は独自の招待コード方式に変更済み。`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` は **不要**。必要なのは `DATABASE_URL` (Prisma pg接続用) のみ。
+### Supabase の使用箇所について
+旧バージョンでは Supabase Auth（Magic Link/Google OAuth）を使用していたが、現在は独自の招待コード方式に変更済み。
 
-**⚠️ セキュリティ修正済み**: `/api/auth/google` ルートは残っているが `SUPABASE_ANON_KEY` 未設定のため無効。以前は `SUPABASE_SERVICE_ROLE_KEY` をフォールバックで anon key に使う危険なコードがあったが修正済み（`src/lib/supabase/env.ts`）。B1完了後に Supabase vars を追加する際も **`SUPABASE_SERVICE_ROLE_KEY` は Vercel には追加しないこと**。
+| 変数 | 用途 | 必要か |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | OAuth URL | **不要** — URL は `DATABASE_URL` から自動導出 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | OAuth anon key | **不要** — Google OAuth は無効 |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Storage (LINE添付書類) | **必要** — 未設定時は `/tmp` フォールバック（Vercel では揮発） |
+
+`SUPABASE_SERVICE_ROLE_KEY` は **Supabase Storage の管理クライアント**（書類アップロード/ダウンロード）のためだけに使われる。OAuth には使わない。
+
+**⚠️ セキュリティ修正済み**: 以前は `SUPABASE_SERVICE_ROLE_KEY` をフォールバックで **anon key** に使う危険なコードがあった（全OAuthユーザーにDB全権を付与）。`src/lib/supabase/env.ts` の `anonKeyCandidates` から除外済み。`/api/auth/google` ルートは残っているが `SUPABASE_ANON_KEY` 未設定のため無効。
 
 ---
 
