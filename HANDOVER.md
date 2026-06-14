@@ -130,18 +130,46 @@
 
 ---
 
-## ⚠️ 本番前セキュリティTODO（未修正）
+## セキュリティ修正済み一覧（shiro/bug-fixes ブランチ）
 
-LINE API ルートは `middleware.ts` の `protectedPaths` に含まれておらず、`getRoleFromRequest` が認証なしリクエストに `executive` ロールをデフォルト付与する。Preview フェーズの設計判断だが、**本番前に必ず対処すること**:
+### deny-by-default（キー未設定→全リクエスト拒否）
+| ルート | ガードキー |
+|---|---|
+| `POST /api/line/send` | `LINE_CLI_ADMIN_KEY` |
+| `POST /api/integrations/line-harness/send` | `LINE_CLI_ADMIN_KEY` |
+| `POST /api/line/applicants/[id]/step-message` | `LINE_CLI_ADMIN_KEY` / `LINE_SETTINGS_ADMIN_KEY` |
+| `GET /api/line/scheduled/process` (cron) | `CRON_SECRET` |
+| `POST /api/settings/line/config` | `LINE_SETTINGS_ADMIN_KEY` / `LINE_CLI_ADMIN_KEY` |
+| `POST /api/line/applicants/[id]/schedule` | `LINE_CLI_ADMIN_KEY` / `LINE_SETTINGS_ADMIN_KEY` |
+| `POST /api/integrations/line-harness/submission` | `LINE_HARNESS_WEBHOOK_SECRET` |
+| `POST /api/line/documents` | `LINE_CLI_ADMIN_KEY` / `LINE_HARNESS_WEBHOOK_SECRET` |
 
-| リスク | 該当ルート | 影響 |
-|---|---|---|
-| ✅ 修正済 | `POST /api/line/messages` (`targetMode: "all"`) | `recruit-ai-session-email` Cookie チェック追加 |
-| ✅ 修正済 | `PATCH /api/line/applicants/[id]` | `recruit-ai-session-email` Cookie チェック追加 |
-| ✅ 修正済 | `POST /api/line/applicants/[id]/message` | `recruit-ai-session-email` Cookie チェック追加 |
-| 🟢 低 | `GET /api/line/applicants` など | 未認証でインメモリ応募者データ閲覧 (Previewでは許容) |
+### session cookie gate（`recruit-ai-session-email` 存在確認）
+全ての書き込み操作・PII 返却エンドポイントに追加済み:
+`GET /api/line/applicants`, `PATCH /api/line/applicants/[id]`,
+`POST /api/line/applicants/[id]/message`, `GET /api/line/analytics`,
+`POST /api/line/messages`, `POST/DELETE /api/line/scheduled`,
+`GET /api/line/documents/[id]`,
+`POST/DELETE /api/schedules/events`, `POST/PATCH /api/schedules/slots`,
+`POST/PATCH /api/schedules/bookings`
 
-**推奨対処**: `src/middleware.ts` の `protectedPaths` に `/api/line/` プレフィックスを追加するか、各ルートに `recruit-ai-session-email` Cookie チェックを追加する。
+### ⚠️ B1完了後に追加すべきハードニング（現状の限界）
+
+現在の session gate は Cookie の**存在のみ**を確認する。`httpOnly` / `sameSite: "lax"` / `secure`（本番）フラグが主な保護だが、curl などの直接 HTTP リクエストで Cookie ヘッダーを偽造可能。B1（DB 接続）完了後に各 session gate を以下のパターンへ移行すること:
+
+```typescript
+// 現在（Cookie 存在確認のみ）
+const sessionEmail = request.cookies.get("recruit-ai-session-email")?.value?.trim();
+if (!sessionEmail) return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+
+// B1後の推奨（DB でメンバー検証）
+import { getRecruitingMemberRoleByEmail } from "@/lib/rbac-members";
+const email = request.cookies.get("recruit-ai-session-email")?.value?.trim().toLowerCase() ?? "";
+const member = email ? await getRecruitingMemberRoleByEmail(email) : null;
+if (!member?.active) return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+```
+
+対象: 上記 session cookie gate を追加した全ルート（`/api/rbac/members` は既にこのパターン実装済み）。
 
 ---
 
