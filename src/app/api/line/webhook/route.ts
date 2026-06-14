@@ -38,7 +38,7 @@ function getBaseUrl(request: NextRequest) {
 
 function verifySignature(body: string, signature: string | null) {
   const channelSecret = process.env.LINE_CHANNEL_SECRET;
-  if (!channelSecret) return true;
+  if (!channelSecret) return false;
   if (!signature) return false;
 
   const expected = crypto.createHmac("sha256", channelSecret).update(body).digest("base64");
