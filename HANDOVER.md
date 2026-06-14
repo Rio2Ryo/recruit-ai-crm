@@ -155,15 +155,18 @@
 | `POST /api/line/applicants/[id]/schedule` | `LINE_CLI_ADMIN_KEY` / `LINE_SETTINGS_ADMIN_KEY` |
 | `POST /api/integrations/line-harness/submission` | `LINE_HARNESS_WEBHOOK_SECRET` |
 | `POST /api/line/documents` | `LINE_CLI_ADMIN_KEY` / `LINE_HARNESS_WEBHOOK_SECRET` |
+| `POST /api/line/webhook` | `LINE_CHANNEL_SECRET`（HMAC-SHA256署名検証） |
 
 ### session cookie gate（`recruit-ai-session-email` 存在確認）
-全ての書き込み操作・PII 返却エンドポイントに追加済み:
+全ての書き込み操作・PII 返却・内部状態エンドポイントに追加済み:
 `GET /api/line/applicants`, `PATCH /api/line/applicants/[id]`,
 `POST /api/line/applicants/[id]/message`, `GET /api/line/analytics`,
 `POST /api/line/messages`, `POST/DELETE /api/line/scheduled`,
 `GET /api/line/documents/[id]`,
 `POST/DELETE /api/schedules/events`, `POST/PATCH /api/schedules/slots`,
-`POST/PATCH /api/schedules/bookings`
+`POST/PATCH /api/schedules/bookings`,
+`GET /api/settings/line/status`, `GET /api/settings/line/env`,
+`GET /api/settings/line/test`, `GET /api/rbac/roles`
 
 ### ⚠️ B1完了後に追加すべきハードニング（現状の限界）
 
@@ -206,7 +209,7 @@ projects/recruit-ai-crm/
 ├── prisma/schema.prisma           # DBスキーマ 26モデル
 ├── prisma/migrations/             # 2件のマイグレーション (未apply)
 ├── src/
-│   ├── middleware.ts              # 認証 (招待コード → セッションCookie)
+│   ├── proxy.ts                   # 認証プロキシ (Next.js 16 — 旧 middleware.ts)
 │   ├── app/
 │   │   ├── (auth)/login/          # ログインページ
 │   │   ├── (dashboard)/
