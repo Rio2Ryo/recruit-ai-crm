@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const editableEnv = [
   "LINE_CHANNEL_ACCESS_TOKEN",
@@ -14,7 +14,12 @@ function getVercelContext() {
   return { token, projectId, teamId };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const sessionEmail = request.cookies.get("recruit-ai-session-email")?.value?.trim();
+  if (!sessionEmail) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
   const { token, projectId, teamId } = getVercelContext();
 
   return NextResponse.json({
