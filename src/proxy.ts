@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const SESSION_COOKIE = "recruit-ai-session-email";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   const hasAuthCode = Boolean(searchParams.get("code"));
