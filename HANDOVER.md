@@ -54,16 +54,17 @@
    DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:6543/postgres?pgbouncer=true
    DIRECT_URL=postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres
    ```
-3. マイグレーション実行（direct URLで）:
+3. マイグレーション実行（`DIRECT_URL` を設定済みであれば追加引数不要）:
    ```bash
-   DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres" \
-     npx prisma migrate dev --name legacy-models
+   npx prisma migrate dev --name legacy-models
    npx prisma generate
    ```
    > **注意**: `migrate dev` は既存の2件のマイグレーション（schedule/line テーブル）を適用後、
    > スキーマに未含有の17個のレガシーモデル（Company/Student/Application 等）用の
    > 新しいマイグレーションファイルを `prisma/migrations/` に自動生成します。
    > 生成されたファイルを `git add && git commit` してください。
+   > `prisma.config.ts` に `directUrl: process.env["DIRECT_URL"]` を追加済みのため、
+   > pgbouncer (port 6543) を通さず直接接続でDDLが実行される。
 4. 初回ログインで `executive` ロールが自動付与される（`rbac-members.ts` 初期化ロジック）
 
 **影響**: DB接続なしではログイン・候補者保存・スケジュール・ドキュメント保存が一切機能しない。
