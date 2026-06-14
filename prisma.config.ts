@@ -8,4 +8,10 @@ export default defineConfig({
   migrations: {
     path: "prisma/migrations",
   },
+  // datasource.url is used by the schema engine (migrate/introspect) only — not by PrismaClient.
+  // Point to DIRECT_URL (port 5432) so DDL bypasses pgbouncer (port 6543).
+  // PrismaClient runtime uses @prisma/adapter-pg with DATABASE_URL independently (src/lib/prisma.ts).
+  datasource: {
+    url: process.env["DIRECT_URL"],
+  },
 });

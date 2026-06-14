@@ -63,8 +63,10 @@
    > スキーマに未含有の17個のレガシーモデル（Company/Student/Application 等）用の
    > 新しいマイグレーションファイルを `prisma/migrations/` に自動生成します。
    > 生成されたファイルを `git add && git commit` してください。
-   > `prisma/schema.prisma` の datasource ブロックに `directUrl = env("DIRECT_URL")` を設定済みのため、
-   > pgbouncer (port 6543) を通さず直接接続でDDLが実行される。
+   > `prisma.config.ts` の `datasource.url` が `DIRECT_URL` (port 5432) を指しているため、
+   > pgbouncer (port 6543) を迂回してスキーマエンジンが直接接続でDDLを実行する。
+   > Prisma v7 では `schema.prisma` datasource に `url`/`directUrl` を書けない（v7の破壊的変更）。
+   > ランタイムの `PrismaClient` は `src/lib/prisma.ts` の `@prisma/adapter-pg` が `DATABASE_URL` を使用する（独立）。
 4. 初回ログインで `executive` ロールが自動付与される（`rbac-members.ts` 初期化ロジック）
 
 **影響**: DB接続なしではログイン・候補者保存・スケジュール・ドキュメント保存が一切機能しない。

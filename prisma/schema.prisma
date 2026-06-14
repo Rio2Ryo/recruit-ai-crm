@@ -3,10 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  // directUrl bypasses pgbouncer (port 6543) for DDL; requires DIRECT_URL (port 5432) at migrate time.
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 enum CompanyMemberRole {
