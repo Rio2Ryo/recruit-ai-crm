@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -8,6 +9,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // Silence the "inferred workspace root" warning caused by the monorepo's
+    // root-level package-lock.json being detected alongside this project's own.
+    root: path.resolve(__dirname),
+  },
   async headers() {
     return [
       {
