@@ -7,7 +7,7 @@ function getBaseUrl(request: NextRequest) {
 
 function isAuthorized(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true;
+  if (!cronSecret) return false;
   const header = request.headers.get("authorization") ?? "";
   return header === `Bearer ${cronSecret}`;
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const requiredEnv = [
@@ -40,7 +40,12 @@ async function getDbHealth() {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const sessionEmail = request.cookies.get("recruit-ai-session-email")?.value?.trim();
+  if (!sessionEmail) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://recruit-ai-crm.vercel.app";
 
   return NextResponse.json({

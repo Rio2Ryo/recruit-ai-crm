@@ -5,7 +5,7 @@ import { scheduleRuleMessagesForApplicant } from "@/lib/line-scheduler";
 
 function isAuthorized(request: NextRequest) {
   const secret = process.env.LINE_HARNESS_WEBHOOK_SECRET;
-  if (!secret) return true;
+  if (!secret) return false;
 
   return request.headers.get("x-line-harness-secret") === secret;
 }

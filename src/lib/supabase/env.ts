@@ -41,9 +41,8 @@ export function getSupabaseAuthEnv() {
     clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
     clean(process.env.SUPABASE_ANON_KEY),
     clean(process.env.SUPABASE_PUBLISHABLE_KEY),
-    clean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-    clean(process.env.SUPABASE_SERVICE_KEY),
-    clean(process.env.SUPABASE_SERVICE_ROLE),
+    // NOTE: service-role keys intentionally excluded — using one as an anon key would
+    // grant every OAuth user full DB access.
   ];
 
   const url = urlCandidates.find(isHttpUrl) ?? "";

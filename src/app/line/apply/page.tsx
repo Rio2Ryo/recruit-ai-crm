@@ -15,6 +15,7 @@ function LineApplyForm() {
   const [sent, setSent] = useState(false);
   const [scheduleUrl, setScheduleUrl] = useState("/schedule");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     school: "",
@@ -40,16 +41,24 @@ function LineApplyForm() {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setLoading(true);
-    const response = await fetch("/api/line/apply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, lineUserId }),
-    });
-    const json = await response.json().catch(() => ({}));
-    setLoading(false);
-    if (response.ok) {
-      setScheduleUrl(json.scheduleUrl ?? `/schedule?lineUserId=${encodeURIComponent(lineUserId)}`);
-      setSent(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/line/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, lineUserId }),
+      });
+      const json = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setScheduleUrl(json.scheduleUrl ?? `/schedule?lineUserId=${encodeURIComponent(lineUserId)}`);
+        setSent(true);
+      } else {
+        setError("送信に失敗しました。もう一度お試しください。");
+      }
+    } catch {
+      setError("通信エラーが発生しました。電波の良い場所で再度お試しください。");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -127,6 +136,11 @@ function LineApplyForm() {
             />
           </div>
 
+          {error && (
+            <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+              {error}
+            </p>
+          )}
           <Button type="submit" size="lg" className="w-full bg-[#06c755] hover:bg-[#05b54d]" disabled={loading}>
             {loading ? "送信中..." : "公式LINEで応募する"}
           </Button>

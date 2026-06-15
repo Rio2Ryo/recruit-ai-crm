@@ -33,6 +33,11 @@ async function pushDirectLineMessage(to: string, text: string) {
 }
 
 export async function GET(request: NextRequest) {
+  const sessionEmail = request.cookies.get("recruit-ai-session-email")?.value?.trim();
+  if (!sessionEmail) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
   const baseUrl = getBaseUrl(request);
   const required = ["NEXT_PUBLIC_APP_URL", "DATABASE_URL"];
   const optional = ["LINE_CHANNEL_ACCESS_TOKEN", "LINE_CHANNEL_SECRET", "CRON_SECRET"];

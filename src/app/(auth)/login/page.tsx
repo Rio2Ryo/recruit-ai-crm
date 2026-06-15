@@ -59,7 +59,7 @@ function LoginForm() {
         <p className="mt-1 text-sm text-gray-500">メールアドレスと招待コードでログイン</p>
       </div>
 
-      <div className="space-y-4">
+      <form onSubmit={(e) => { e.preventDefault(); login(); }} className="space-y-4">
         <Input
           type="email"
           value={email}
@@ -76,7 +76,7 @@ function LoginForm() {
           autoComplete="one-time-code"
         />
 
-        <Button type="button" className="w-full" onClick={login} disabled={status.type === "loading"}>
+        <Button type="submit" className="w-full" disabled={status.type === "loading"}>
           {status.type === "loading" ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
           ログイン
         </Button>
@@ -97,7 +97,7 @@ function LoginForm() {
             {emailFromQuery ? <div className="mt-1 font-semibold">対象メール: {emailFromQuery}</div> : null}
           </div>
         ) : null}
-      </div>
+      </form>
     </Card>
   );
 }
